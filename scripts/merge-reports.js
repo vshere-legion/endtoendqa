@@ -117,29 +117,32 @@ class ReportMerger {
   }
 
   /**
-   * Build reporter arguments for Playwright merge-reports
+   * Build reporter arguments for Playwright merge-reports.
+   *
+   * Lookup table mirrors src/config/reporters-config.ts STANDARD_REPORTERS.
+   * To add a reporter: add an entry here AND in reporters-config.ts getReporters().
    */
   buildReporterArgs() {
     const args = [];
 
-    // Add reporters
+    // Lookup table: reporter name → Playwright --reporter arg string
+    const REPORTER_ARGS = {
+      html:  (outDir) => `html={ outputFolder: '${outDir}/html' }`,
+      json:  (outDir) => `json={ outputFile: '${outDir}/results.json' }`,
+      junit: (outDir) => `junit={ outputFile: '${outDir}/junit.xml' }`,
+      list:  ()       => 'list',
+      // Add new reporters here (keep in sync with reporters-config.ts getReporters()):
+      // allure: (outDir) => `allure-playwright={ outputFolder: '${outDir}/allure-results' }`,
+    };
+
     this.config.reporters.forEach(reporter => {
-      switch (reporter.trim()) {
-        case 'html':
-          args.push('--reporter', `html={ outputFolder: '${this.config.mergedReportPath}/html' }`);
-          break;
-        case 'json':
-          args.push('--reporter', `json={ outputFile: '${this.config.mergedReportPath}/results.json' }`);
-          break;
-        case 'junit':
-          args.push('--reporter', `junit={ outputFile: '${this.config.mergedReportPath}/junit.xml' }`);
-          break;
-        case 'list':
-          args.push('--reporter', 'list');
-          break;
-        default:
-          console.warn(`Unknown reporter: ${reporter}`);
+      const name = reporter.trim();
+      const builder = REPORTER_ARGS[name];
+      if (!builder) {
+        console.warn(`Unknown reporter: ${name} (add it to REPORTER_ARGS in merge-reports.js)`);
+        return;
       }
+      args.push('--reporter', builder(this.config.mergedReportPath));
     });
 
     return args;

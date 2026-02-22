@@ -79,7 +79,12 @@ export class TestContext {
   }
 
   /**
-   * Get DataService instance (lazy-loaded, one per scenario)
+   * Get DataService instance (lazy-loaded, one per scenario).
+   *
+   * DataService implements CredentialProvider — consumers that only need
+   * credential lookup can type their reference as CredentialProvider.
+   * To swap the credential source in future, change this getter to return
+   * any CredentialProvider implementation without touching auth.steps.ts.
    */
   get dataService(): DataService {
     if (!this._dataService) {

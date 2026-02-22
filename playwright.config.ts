@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
-import { defineBddConfig, cucumberReporter } from 'playwright-bdd';
+import { defineBddConfig } from 'playwright-bdd';
 import { loadEnvConfig } from './config/env-manager';
 import { TIMEOUTS } from './config/framework.config';
+import { getReporters } from './src/config/reporters-config';
 
 // ─── Environment & Team Selection ──────────────────────────
 const env = process.env.TEST_ENV || 'dev';
@@ -25,12 +26,12 @@ function getTestPaths() {
   if (process.env.FEATURE_PATHS) {
     const featurePaths = process.env.FEATURE_PATHS.split(',').map(p => p.trim());
     const base = TEAM === 'all' || TEAM === 'ALL' ? 'teams/*' : `teams/${TEAM}`;
-    const steps = [`${base}/steps/**/*.ts`, 'shared/steps/**/*.ts', 'src/steps/**/*.ts'];
+    const steps = [`${base}/steps/**/*.ts`, 'shared/steps/**/*.ts', 'src/steps/**/*.ts', './src/fixtures/test-fixtures.ts'];
     return { features: featurePaths, steps };
   }
 
   const base = TEAM === 'all' || TEAM === 'ALL' ? 'teams/*' : `teams/${TEAM}`;
-  const steps = [`${base}/steps/**/*.ts`, 'shared/steps/**/*.ts', 'src/steps/**/*.ts'];
+  const steps = [`${base}/steps/**/*.ts`, 'shared/steps/**/*.ts', 'src/steps/**/*.ts', './src/fixtures/test-fixtures.ts'];
 
   if (TYPE === 'api') {
     return { features: [`${base}/features/api/**/*.feature`], steps };
@@ -55,7 +56,6 @@ const testDir = defineBddConfig({
   steps,
   outputDir,
   tags: process.env.TEST_TAGS || undefined,
-  importTestFrom: './src/fixtures/test-fixtures',
 });
 
 // ─── Global Setup / Teardown ─────────────────────────────
@@ -81,14 +81,7 @@ export default defineConfig({
   timeout: Number(process.env.TIMEOUT) || 60_000,
   expect: { timeout: TIMEOUTS.assertion },
 
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: 'reports/html', open: 'never' }],
-    ['json', { outputFile: 'reports/json/results.json' }],
-    ['junit', { outputFile: 'reports/junit/results.xml' }],
-    cucumberReporter('html', { outputFile: 'reports/cucumber/cucumber-report.html' }),
-    cucumberReporter('json', { outputFile: 'reports/cucumber/cucumber-report.json' }),
-  ],
+  reporter: getReporters(),
 
   use: {
     baseURL: process.env.BASE_URL || 'https://staging-enterprise.dev.legion.work/',

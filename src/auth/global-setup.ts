@@ -36,8 +36,29 @@ async function globalSetup(config: FullConfig): Promise<void> {
   console.log('╔══════════════════════════════════════════╗');
   console.log('║          GLOBAL SETUP                    ║');
   console.log(`║  Environment: ${envConfig.environment.padEnd(26)}║`);
-  console.log(`║  Enterprise:  ${envConfig.enterprise.padEnd(26)}║`);
+  console.log(`║  Enterprise:  ${(envConfig.enterprise || '(not set)').padEnd(26)}║`);
   console.log('╚══════════════════════════════════════════╝');
+
+  // ─── Startup Validation ────────────────────────────────────
+  // Surface misconfiguration before any test worker starts.
+  // Warnings not errors — tests run but will fail with clearer context.
+
+  if (!process.env.TEST_ENV) {
+    console.warn(
+      '[GlobalSetup] WARNING: TEST_ENV is not set. Defaulting to "dev".\n' +
+      '             The dev environment is typically unreachable from CI.\n' +
+      '             Set TEST_ENV=rc (or staging/uat/prod) to target a real environment.',
+    );
+  }
+
+  if (!envConfig.enterprise) {
+    console.warn(
+      '[GlobalSetup] WARNING: ENTERPRISE env var is not set.\n' +
+      '             DataService will have no credential data.\n' +
+      '             Login steps fall back to the simple role map (admin@test.com etc.).\n' +
+      '             Set ENTERPRISE=<name> to load test-data/users/user_loc_<name>_<env>.json.',
+    );
+  }
 
   if (process.env.SKIP_HEALTH_CHECK === 'true') {
     console.log('[GlobalSetup] Health check skipped (SKIP_HEALTH_CHECK=true)');

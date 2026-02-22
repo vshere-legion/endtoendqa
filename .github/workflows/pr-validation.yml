@@ -1,12 +1,12 @@
 name: PR Validation
 
-# Lightweight checks that run on every PR to develop or main.
+# Lightweight checks that run on every PR to feature or master.
 # This is SEPARATE from the full test execution workflow (playwright-tests.yml).
 # Purpose: fast feedback loop — fail PRs that break lint, types, or BDD generation.
 
 on:
   pull_request:
-    branches: [develop, master]
+    branches: [feature, master]
     types: [opened, synchronize, reopened, edited]
 
 concurrency:

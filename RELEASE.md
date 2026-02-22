@@ -23,7 +23,7 @@ This framework follows [Semantic Versioning](https://semver.org/) (SemVer):
 ### Biweekly Release (MINOR/PATCH)
 
 ```
-Week 1-2: Feature development on develop
+Week 1-2: Feature development on feature
 Day 10:   Cut release branch
 Day 10-12: Stabilization (bug fixes only)
 Day 12:   Merge to master, tag, publish release notes
@@ -32,9 +32,9 @@ Day 12:   Merge to master, tag, publish release notes
 **Step by step:**
 
 ```bash
-# 1. Cut release branch from develop
-git checkout develop
-git pull origin develop
+# 1. Cut release branch from feature
+git checkout feature
+git pull origin feature
 git checkout -b release/v2.3.0
 
 # 2. Update version in package.json
@@ -66,11 +66,11 @@ git push origin v2.3.0
 # Use "Generate release notes" for auto-generated changelog
 # Add highlights section manually for notable changes
 
-# 8. Back-merge to develop
-git checkout develop
-git pull origin develop
+# 8. Back-merge to feature
+git checkout feature
+git pull origin feature
 git merge master
-git push origin develop
+git push origin feature
 
 # 9. Delete release branch
 git branch -d release/v2.3.0
@@ -104,10 +104,10 @@ git pull origin master
 git tag -a v2.2.1 -m "Hotfix v2.2.1 — fix auth crash"
 git push origin v2.2.1
 
-# 6. Back-merge to develop
-git checkout develop
+# 6. Back-merge to feature
+git checkout feature
 git merge master
-git push origin develop
+git push origin feature
 ```
 
 ### Major Release
@@ -115,7 +115,7 @@ git push origin develop
 Major releases have breaking changes. They require advance planning:
 
 1. **Sprint N-2:** Announce planned breaking changes in `#automation-framework`
-2. **Sprint N-1:** Deprecation warnings live on `develop` (all teams see them in CI)
+2. **Sprint N-1:** Deprecation warnings live on `feature` (all teams see them in CI)
 3. **Sprint N:** Cut `release/v3.0.0`, include migration guide in release notes
 4. **Sprint N+1:** Support window — help teams migrate, fix issues
 

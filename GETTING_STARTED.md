@@ -404,7 +404,7 @@ name: Playwright Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, feature]
   pull_request:
 
 jobs:

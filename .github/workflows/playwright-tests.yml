@@ -37,9 +37,9 @@ on:
         required: false
         default: '1'
 
-  # Auto-trigger on PR to master/develop
+  # Auto-trigger on PR to master/feature
   pull_request:
-    branches: [master, develop]
+    branches: [master, feature]
     paths:
       - 'src/**'
       - 'teams/**'

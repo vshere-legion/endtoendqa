@@ -25,18 +25,18 @@ cd playwright-cucumber-enterprise
 npm ci
 npx playwright install --with-deps
 
-# 2. Create your feature branch from develop
-git checkout develop
-git pull origin develop
+# 2. Create your feature branch from feature
+git checkout feature
+git pull origin feature
 git checkout -b feature/sch-my-new-tests
 
 # 3. Make changes, test locally
 npm run lint && npm run typecheck
 TEST_ENV=rc npx bddgen && npx playwright test --grep "@wip" --project chromium
 
-# 4. Push and open PR to develop
+# 4. Push and open PR to feature
 git push -u origin feature/sch-my-new-tests
-# Open PR via GitHub → target branch: develop
+# Open PR via GitHub → target branch: feature
 ```
 
 ---
@@ -48,7 +48,7 @@ master ────────●────────────●──�
                ↑            ↑
           release/v2.1  release/v2.2
                ↑            ↑
-develop ───●───●───●───●────●───●────── (integration branch)
+feature ───●───●───●───●────●───●────── (integration branch)
            ↑       ↑        ↑
      feature/   feature/  feature/
      sch-xyz    core-abc  tnp-def
@@ -56,13 +56,13 @@ develop ───●───●───●───●────●───
 
 | Branch | Create from | Merge to | Purpose |
 |--------|------------|----------|---------|
-| `feature/<team>-<desc>` | `develop` | `develop` | All new work |
-| `release/vX.Y.Z` | `develop` | `master` + `develop` | Release stabilization |
-| `hotfix/<desc>` | `master` | `master` + `develop` | Emergency production fix |
+| `feature/<team>-<desc>` | `feature` | `feature` | All new work |
+| `release/vX.Y.Z` | `feature` | `master` + `feature` | Release stabilization |
+| `hotfix/<desc>` | `master` | `master` + `feature` | Emergency production fix |
 
 **Rules:**
-- Never push directly to `master` or `develop`
-- Always branch from `develop` for new work
+- Never push directly to `master` or `feature`
+- Always branch from `feature` for new work
 - Delete feature branches after merge
 - Feature branch naming: `feature/<team>-<short-description>` (e.g., `feature/sch-p2p-drag-drop`)
 
@@ -74,10 +74,10 @@ develop ───●───●───●───●────●───
 
 If your changes are **entirely within** `teams/<YOUR_TEAM>/`:
 
-1. Branch from `develop`
+1. Branch from `feature`
 2. Make changes in your team directory
 3. Run `npm run lint && npm run typecheck && npx bddgen`
-4. Open PR to `develop`
+4. Open PR to `feature`
 5. Get **1 approval** from your team
 6. Squash merge
 
@@ -86,10 +86,10 @@ If your changes are **entirely within** `teams/<YOUR_TEAM>/`:
 If your changes touch `src/`, `shared/`, `config/`, `scripts/`, or root files:
 
 1. **Open an issue first** describing what you want to change and why
-2. Branch from `develop`
+2. Branch from `feature`
 3. Make changes
 4. Run full validation: `npm run lint && npm run typecheck && npm run test:smoke`
-5. Open PR to `develop`
+5. Open PR to `feature`
 6. Get **2 approvals** (at least 1 from Framework Core Team)
 7. Squash merge
 
@@ -116,7 +116,7 @@ If your change modifies public APIs, removes exports, changes fixture interfaces
    - PR template validation
 4. **Core changes additionally require:**
    - Framework smoke suite (`npm run test:smoke`)
-5. **Squash merge only** — keeps `develop` and `master` history clean
+5. **Squash merge only** — keeps `feature` and `master` history clean
 6. **Delete the source branch** after merge
 
 ---

@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
-import { defineBddConfig, cucumberReporter } from 'playwright-bdd';
+import { defineBddConfig } from 'playwright-bdd';
 import { loadEnvConfig } from './config/env-manager';
 import { TIMEOUTS } from './config/framework.config';
+import { getReporters } from './src/config/reporters-config';
 
 // ─── Environment & Team Selection ──────────────────────────
 const env = process.env.TEST_ENV || 'dev';
@@ -81,14 +82,7 @@ export default defineConfig({
   timeout: Number(process.env.TIMEOUT) || 60_000,
   expect: { timeout: TIMEOUTS.assertion },
 
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: 'reports/html', open: 'never' }],
-    ['json', { outputFile: 'reports/json/results.json' }],
-    ['junit', { outputFile: 'reports/junit/results.xml' }],
-    cucumberReporter('html', { outputFile: 'reports/cucumber/cucumber-report.html' }),
-    cucumberReporter('json', { outputFile: 'reports/cucumber/cucumber-report.json' }),
-  ],
+  reporter: getReporters(),
 
   use: {
     baseURL: process.env.BASE_URL || 'https://staging-enterprise.dev.legion.work/',

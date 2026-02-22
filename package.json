@@ -1,6 +1,6 @@
 {
   "name": "playwright-cucumber-enterprise",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Enterprise Playwright + Cucumber BDD Framework for Legion",
   "scripts": {
     "bddgen": "bddgen",
@@ -23,7 +23,6 @@
     "merge-reports:failures": "node scripts/merge-reports.js --capture-failures",
     "rerun-failed": "node scripts/rerun-failed.js",
     "report:open": "npx playwright show-report reports/html",
-    "validate": "npm run lint && npm run typecheck && npx bddgen",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"**/*.ts\"",
@@ -38,25 +37,34 @@
     "docker:test:team": "docker compose up test-team",
     "docker:sharded": "docker compose --profile sharded up"
   },
-  "keywords": ["playwright", "bdd", "cucumber", "testing", "legion"],
+  "keywords": [
+    "playwright",
+    "bdd",
+    "cucumber",
+    "testing",
+    "legion"
+  ],
   "author": "QA Team",
   "license": "MIT",
-  "engines": { "node": ">=18.0.0" },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
-    "@playwright/test": "^1.40.0",
-    "playwright-bdd": "^6.1.0",
-    "@cucumber/cucumber": "^10.0.0",
+    "@cucumber/cucumber": "^11.0.0",
+    "@playwright/test": "^1.50.0",
+    "axios": "^1.13.5",
     "dotenv": "^16.4.0",
-    "glob": "^10.3.10"
+    "glob": "^10.3.10",
+    "playwright-bdd": "^8.4.2"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.50.0",
-    "prettier": "^3.1.0",
-    "rimraf": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.4.0",
+    "rimraf": "^6.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.0"
+    "typescript": "^5.7.0"
   }
 }

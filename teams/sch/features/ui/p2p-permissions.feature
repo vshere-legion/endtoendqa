@@ -7,7 +7,7 @@ Feature: P2P LG Permission-Based Access Control
   Background:
     Given I am logged in as "InternalAdmin"
 
-  @step1
+  @step1 @wip
   Scenario: Manager cannot edit operating hours when Manage Working Hours permission is disabled
     Given I navigate to OPS Portal
     And I go to User Management then Users and Roles
@@ -23,7 +23,7 @@ Feature: P2P LG Permission-Based Access Control
     And I enable "Manage Working Hours Settings" permission for SM
     Then the permission should be re-enabled successfully
 
-  @step2
+  @step2 @wip
   Scenario: Budget Hours smart card visibility based on Manage Budget permission
     Given I navigate to OPS Portal
     And I go to User Management then Users and Roles
@@ -45,7 +45,7 @@ Feature: P2P LG Permission-Based Access Control
     And I navigate to the schedule page
     Then the Budget Hours smart card should be visible
 
-  @step3
+  @step3 @wip
   Scenario: Parent location disables budget edit button
     Given I logout and login as "InternalAdmin"
     And I navigate to the schedule page

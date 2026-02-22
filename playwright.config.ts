@@ -26,12 +26,12 @@ function getTestPaths() {
   if (process.env.FEATURE_PATHS) {
     const featurePaths = process.env.FEATURE_PATHS.split(',').map(p => p.trim());
     const base = TEAM === 'all' || TEAM === 'ALL' ? 'teams/*' : `teams/${TEAM}`;
-    const steps = [`${base}/steps/**/*.ts`, 'shared/steps/**/*.ts', 'src/steps/**/*.ts'];
+    const steps = [`${base}/steps/**/*.ts`, 'shared/steps/**/*.ts', 'src/steps/**/*.ts', './src/fixtures/test-fixtures.ts'];
     return { features: featurePaths, steps };
   }
 
   const base = TEAM === 'all' || TEAM === 'ALL' ? 'teams/*' : `teams/${TEAM}`;
-  const steps = [`${base}/steps/**/*.ts`, 'shared/steps/**/*.ts', 'src/steps/**/*.ts'];
+  const steps = [`${base}/steps/**/*.ts`, 'shared/steps/**/*.ts', 'src/steps/**/*.ts', './src/fixtures/test-fixtures.ts'];
 
   if (TYPE === 'api') {
     return { features: [`${base}/features/api/**/*.feature`], steps };
@@ -56,7 +56,6 @@ const testDir = defineBddConfig({
   steps,
   outputDir,
   tags: process.env.TEST_TAGS || undefined,
-  importTestFrom: './src/fixtures/test-fixtures',
 });
 
 // ─── Global Setup / Teardown ─────────────────────────────

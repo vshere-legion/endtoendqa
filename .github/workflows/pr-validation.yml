@@ -1,0 +1,189 @@
+name: PR Validation
+
+# Lightweight checks that run on every PR to develop or main.
+# This is SEPARATE from the full test execution workflow (playwright-tests.yml).
+# Purpose: fast feedback loop — fail PRs that break lint, types, or BDD generation.
+
+on:
+  pull_request:
+    branches: [develop, master]
+    types: [opened, synchronize, reopened, edited]
+
+concurrency:
+  group: pr-validation-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── Quality Gate (runs on ALL PRs) ──────────────────────
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: BDD generation check
+        run: npx bddgen
+        env:
+          TEST_ENV: staging
+
+      - name: Verify no secrets in diff
+        run: |
+          # Check for common secret patterns in the PR diff
+          PATTERNS=(
+            'password\s*[:=]\s*["\x27][^"\x27]{8,}'
+            'api[_-]?key\s*[:=]\s*["\x27]'
+            'secret\s*[:=]\s*["\x27]'
+            'token\s*[:=]\s*["\x27][A-Za-z0-9+/=]{20,}'
+            'BEGIN.*PRIVATE KEY'
+          )
+          FOUND=0
+          for pattern in "${PATTERNS[@]}"; do
+            if git diff origin/${{ github.base_ref }}...HEAD -- ':(exclude)*.md' ':(exclude)*.yml' ':(exclude)*.yaml' | grep -iP "$pattern" 2>/dev/null; then
+              echo "::error::Potential secret detected matching pattern: $pattern"
+              FOUND=1
+            fi
+          done
+          if [ "$FOUND" -eq 1 ]; then
+            echo "::error::Review flagged patterns above. If these are false positives, add a comment to the PR explaining why."
+            exit 1
+          fi
+
+  # ─── PR Template Check ──────────────────────────────────
+  pr-template:
+    name: PR Template Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check PR body is not empty
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [ -z "$PR_BODY" ] || [ ${#PR_BODY} -lt 50 ]; then
+            echo "::error::PR description is too short. Please fill out the PR template."
+            exit 1
+          fi
+
+      - name: Check change category selected
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if ! echo "$PR_BODY" | grep -q '\[x\].*\(Team-only\|Shared/Core\|Breaking Change\|CI/Infra\|Docs only\)'; then
+            echo "::error::Please select a Change Category in the PR template (check one of the boxes)."
+            exit 1
+          fi
+
+  # ─── Commit Message Check ────────────────────────────────
+  commit-lint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR title (Conventional Commits)
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          PATTERN='^(feat|fix|refactor|test|chore|docs|perf|ci|build|revert)(\([a-z0-9-]+\))?!?: .+'
+          if ! echo "$PR_TITLE" | grep -qE "$PATTERN"; then
+            echo "::error::PR title must follow Conventional Commits format."
+            echo "::error::Expected: <type>(<scope>): <description>"
+            echo "::error::Examples: feat(sch): add P2P tests, fix(core): auth timeout, chore: bump deps"
+            echo "::error::Valid types: feat, fix, refactor, test, chore, docs, perf, ci, build, revert"
+            echo "::error::Got: $PR_TITLE"
+            exit 1
+          fi
+
+  # ─── Framework Smoke (only for core/shared changes) ─────
+  framework-smoke:
+    name: Framework Smoke Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Only run smoke tests when core files are changed
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'core-change') ||
+      contains(github.event.pull_request.title, '(core)') ||
+      contains(github.event.pull_request.title, '(shared)') ||
+      contains(github.event.pull_request.title, '(config)')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate BDD specs
+        run: npx bddgen
+        env:
+          TEST_ENV: staging
+
+      - name: Run smoke suite
+        run: npx playwright test --project=chromium --grep "@P1-Critical" --workers=2
+        env:
+          TEST_ENV: staging
+          CI: true
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-failure-artifacts
+          path: |
+            reports/screenshots/
+            test-results/
+          retention-days: 7
+
+  # ─── Change Scope Detection ──────────────────────────────
+  detect-scope:
+    name: Detect Change Scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if core files changed
+        id: core-check
+        run: |
+          CORE_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -cE '^(src/|shared/|config/|scripts/|playwright\.config\.ts|tsconfig\.json|package\.json)' || true)
+          echo "core_changed=$CORE_CHANGED" >> $GITHUB_OUTPUT
+          if [ "$CORE_CHANGED" -gt 0 ]; then
+            echo "::warning::This PR modifies $CORE_CHANGED core file(s). Core team review required."
+          fi
+
+      - name: Label PR if core change
+        if: steps.core-check.outputs.core_changed > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['core-change']
+            });

@@ -1,0 +1,60 @@
+# ════════════════════════════════════════════════════════════════
+# CODEOWNERS — Playwright + Cucumber Enterprise Framework
+# ════════════════════════════════════════════════════════════════
+#
+# GitHub will automatically request reviews from these owners
+# when a PR modifies files matching the patterns below.
+#
+# Syntax: <pattern> <owner> [<owner>...]
+# Owners can be @usernames, @org/team-slugs, or emails.
+#
+# IMPORTANT: Later rules override earlier ones for the same file.
+# Order matters — put general rules first, specific overrides last.
+# ════════════════════════════════════════════════════════════════
+
+# ─── Default: Framework Core Team owns everything ────────────
+# This is the catch-all. Any file not matched below requires
+# core team review. This prevents accidental changes to root
+# configs, CI, or shared code without oversight.
+*                                   @legionco/framework-core
+
+# ─── Framework Core (strict ownership) ───────────────────────
+# These directories contain shared infrastructure that ALL 11
+# teams depend on. Changes here can break everyone.
+/src/                               @legionco/framework-core
+/shared/                            @legionco/framework-core
+/config/                            @legionco/framework-core
+/scripts/                           @legionco/framework-core
+/docs/                              @legionco/framework-core
+
+# Root configuration files — high blast radius
+/playwright.config.ts               @legionco/framework-core
+/tsconfig.json                      @legionco/framework-core
+/package.json                       @legionco/framework-core
+/package-lock.json                  @legionco/framework-core
+/.eslintrc.json                     @legionco/framework-core
+/.prettierrc                        @legionco/framework-core
+/Dockerfile                         @legionco/framework-core
+/docker-compose.yml                 @legionco/framework-core
+
+# CI/CD pipelines — DevOps + Core Team
+/.github/                           @legionco/framework-core @legionco/devops
+/ci/                                @legionco/framework-core @legionco/devops
+
+# ─── Team-Owned Directories ─────────────────────────────────
+# Each team owns their directory exclusively. They can merge
+# changes with 1 same-team approval (no core team needed).
+/teams/TNP/                         @legionco/team-tnp
+/teams/sch/                         @legionco/team-sch
+/teams/PLT-Core/                    @legionco/team-plt-core
+/teams/PLT-Int/                     @legionco/team-plt-int
+/teams/PLT-Ops/                     @legionco/team-plt-ops
+/teams/LRB/                         @legionco/team-lrb
+/teams/EV-Com/                      @legionco/team-ev-com
+/teams/EV-LIP/                      @legionco/team-ev-lip
+/teams/EV-ELM/                      @legionco/team-ev-elm
+/teams/GENAI/                       @legionco/team-genai
+/teams/EPR/                         @legionco/team-epr
+
+# ─── Test Data (team-owned, but auditable) ────────────────────
+/test-data/                         @legionco/framework-core

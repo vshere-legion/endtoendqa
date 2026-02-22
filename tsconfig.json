@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@core/*": ["src/*"],
+      "@teams/*": ["teams/*"],
+      "@config/*": ["config/*"],
+      "@shared/*": ["shared/*"],
+      "@test-data/*": ["test-data/*"]
+    },
+    "types": ["node", "@playwright/test"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "core/**/*.ts",
+    "teams/**/*.ts",
+    "shared/**/*.ts",
+    "config/**/*.ts",
+    "test-data/**/*.ts",
+    "playwright.config.ts",
+    ".features-gen/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "reports"]
+}

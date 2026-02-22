@@ -1,0 +1,27 @@
+{
+  "locations": [
+    {
+      "name": "New York HQ",
+      "code": "NY01",
+      "address": "123 Broadway",
+      "city": "New York",
+      "state": "NY",
+      "zip": "10001"
+    }
+  ],
+  "workRules": [
+    {
+      "name": "Standard 40-Hour Week",
+      "code": "STD40",
+      "locationCode": "NY01",
+      "hoursPerWeek": 40
+    }
+  ],
+  "jobTitles": [
+    {
+      "name": "Manager",
+      "code": "MGR",
+      "department": "Management"
+    }
+  ]
+}

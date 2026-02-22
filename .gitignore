@@ -1,0 +1,23 @@
+node_modules/
+test-results/
+playwright-report/
+reports/
+blob-reports/
+.features-gen/
+.features-gen-*/
+dist/
+*.log
+.env
+.env.local
+.DS_Store
+logs/
+.auth/
+.locks/
+
+# Claude Code local state
+.claude/
+
+# Credentials (never commit real passwords)
+**/credentials.json
+**/credentials.json.bak
+**/credentials*.json

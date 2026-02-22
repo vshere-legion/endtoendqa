@@ -1,0 +1,28 @@
+{
+  "locationExternalId": "00187",
+  "locationId": "dfbbea27-3b8d-4ecc-9d39-b7dea22626e3",
+  "employeeExternalId": "M00014",
+
+  "defaultShiftConfig": {
+    "workRole": "Cafe",
+    "startTime": "9:00 AM",
+    "endTime": "1:00 PM",
+    "mealBreakDurationMinutes": 30,
+    "mode": "ForceSave"
+  },
+
+  "shiftFields": {
+    "deleted": false,
+    "includeMealBreak": true
+  },
+
+  "additionalFields": {
+    "notes": "Shift added through API - Created by automation test"
+  },
+
+  "validation": {
+    "timeToleranceMinutes": 5,
+    "validateTeamMember": true,
+    "validateTiming": true
+  }
+}

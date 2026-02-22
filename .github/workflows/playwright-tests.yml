@@ -1,0 +1,270 @@
+name: Playwright BDD Tests
+
+on:
+  # Manual trigger with parameters
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [dev, staging, uat, prod]
+      enterprise:
+        description: 'Enterprise name'
+        required: true
+        default: 'LegionCoffee'
+      team:
+        description: 'Team to run (or "all")'
+        required: false
+        default: 'all'
+      tags:
+        description: 'Cucumber tags filter (e.g., @P1-Critical)'
+        required: false
+        default: ''
+      browser:
+        description: 'Browser to test'
+        required: true
+        default: 'chromium'
+        type: choice
+        options: [chromium, firefox, webkit, all]
+      workers:
+        description: 'Parallel workers'
+        required: false
+        default: '4'
+      shards:
+        description: 'Number of shards (1 = no sharding)'
+        required: false
+        default: '1'
+
+  # Auto-trigger on PR to master/develop
+  pull_request:
+    branches: [master, develop]
+    paths:
+      - 'src/**'
+      - 'teams/**'
+      - 'shared/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+
+  # Scheduled nightly regression
+  schedule:
+    - cron: '0 2 * * 1-5'  # Weekdays at 2 AM UTC
+
+# Cancel in-progress runs on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TEST_ENV: ${{ github.event.inputs.environment || 'staging' }}
+  ENTERPRISE: ${{ github.event.inputs.enterprise || 'LegionCoffee' }}
+  TEST_TEAM: ${{ github.event.inputs.team || 'all' }}
+  TEST_TAGS: ${{ github.event.inputs.tags || '' }}
+  WORKERS: ${{ github.event.inputs.workers || '4' }}
+  CI: true
+  LOG_LEVEL: INFO
+  LOG_TO_FILE: true
+
+jobs:
+  # ─── Lint & Type Check ──────────────────────────────────
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type Check
+        run: npm run typecheck
+
+  # ─── Generate Test Matrix ──────────────────────────────
+  prepare:
+    name: Prepare Shards
+    runs-on: ubuntu-latest
+    outputs:
+      shard-matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          SHARDS=${{ github.event.inputs.shards || '1' }}
+          MATRIX=$(python3 -c "import json; print(json.dumps([i+1 for i in range($SHARDS)]))")
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  # ─── Run Tests (Sharded) ───────────────────────────────
+  test:
+    name: Test (Shard ${{ matrix.shard }}/${{ github.event.inputs.shards || '1' }})
+    needs: [quality-gate, prepare]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJson(needs.prepare.outputs.shard-matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Generate BDD test files
+        run: npx bddgen
+
+      - name: Run Playwright tests
+        run: |
+          SHARD_TOTAL=${{ github.event.inputs.shards || '1' }}
+          SHARD_ARG=""
+          if [ "$SHARD_TOTAL" -gt 1 ]; then
+            SHARD_ARG="--shard=${{ matrix.shard }}/$SHARD_TOTAL"
+          fi
+
+          BROWSER=${{ github.event.inputs.browser || 'chromium' }}
+          PROJECT_ARG=""
+          if [ "$BROWSER" != "all" ]; then
+            PROJECT_ARG="--project=$BROWSER"
+          fi
+
+          npx playwright test $PROJECT_ARG $SHARD_ARG
+
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 7
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.shard }}
+          path: |
+            reports/
+            test-results/
+          retention-days: 7
+
+  # ─── Merge Reports ─────────────────────────────────────
+  merge-reports:
+    name: Merge Reports
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge reports
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload merged HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: all-test-results
+          pattern: test-results-*
+          merge-multiple: true
+
+      - name: Upload Cucumber reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-reports
+          path: all-test-results/reports/cucumber/
+          retention-days: 30
+
+  # ─── Rerun Failed Tests ────────────────────────────────
+  rerun-failures:
+    name: Rerun Failures
+    needs: test
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx playwright install --with-deps
+
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          path: previous-results
+          pattern: test-results-*
+          merge-multiple: true
+
+      - name: Rerun failed tests
+        run: npx playwright test --last-failed
+        continue-on-error: true
+
+      - name: Upload rerun results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rerun-results
+          path: |
+            reports/
+            test-results/
+          retention-days: 7
+
+  # ─── Slack Notification ────────────────────────────────
+  notify:
+    name: Notify
+    needs: [test, merge-reports]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TEST_RESULT: ${{ needs.test.result }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node ci/scripts/slack-notify.js

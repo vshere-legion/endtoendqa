@@ -1,0 +1,21 @@
+{
+  "extends": [],
+  "rules": {
+    "type-enum": [2, "always", [
+      "feat", "fix", "refactor", "test", "chore", "docs", "perf", "ci", "build", "revert"
+    ]],
+    "type-case": [2, "always", "lower-case"],
+    "type-empty": [2, "never"],
+    "subject-empty": [2, "never"],
+    "subject-min-length": [2, "always", 10],
+    "subject-max-length": [2, "always", 100],
+    "scope-case": [2, "always", "lower-case"],
+    "scope-enum": [1, "always", [
+      "core", "shared", "config", "ci", "scripts",
+      "sch", "tnp", "plt", "plt-core", "plt-int", "plt-ops",
+      "lrb", "ev", "ev-com", "ev-lip", "ev-elm",
+      "genai", "epr"
+    ]],
+    "header-max-length": [2, "always", 120]
+  }
+}

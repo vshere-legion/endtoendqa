@@ -1,0 +1,11 @@
+{
+  "TESTRAIL_URL": "https://legiontech.testrail.io/",
+  "TESTRAIL_USER": "",
+  "TESTRAIL_PASSWORD": "",
+  "TESTRAIL_PROJECT_ID": "2",
+  "SUITE_ID": "890",
+  "TESTRAIL_RUN_NUMBER": "",
+  "TESTRAIL_ENABLED": false,
+  "environment": "staging",
+  "enterprise": ""
+}

@@ -1,0 +1,83 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'TEAM',
+               choices: ['ALL','TNP','SCH','PLT-Core','PLT-Int','PLT-Ops','LRB','EV-Com','EV-LIP','EV-ELM','GENAI','EPR'],
+               description: 'Team to run tests for')
+        choice(name: 'ENVIRONMENT',
+               choices: ['dev','staging','uat','prod'],
+               description: 'Target environment')
+        choice(name: 'BROWSER',
+               choices: ['chromium','firefox','webkit','all'],
+               description: 'Browser to test on')
+        string(name: 'TAGS',
+               defaultValue: '',
+               description: 'Tag expression (e.g., @P1-Critical and @Regression)')
+        string(name: 'PARALLEL_WORKERS',
+               defaultValue: '4',
+               description: 'Number of parallel workers')
+    }
+
+    environment {
+        TEST_ENV  = "${params.ENVIRONMENT}"
+        TEST_TEAM = "${params.TEAM}"
+        TEST_TAGS = "${params.TAGS}"
+        WORKERS   = "${params.PARALLEL_WORKERS}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+
+        stage('Install') {
+            steps {
+                sh 'npm ci'
+                sh 'npx playwright install --with-deps chromium'
+            }
+        }
+
+        stage('BDD Generate') {
+            steps { sh 'npm run bddgen' }
+        }
+
+        stage('Test') {
+            steps {
+                script {
+                    def cmd = "npx playwright test --workers=${params.PARALLEL_WORKERS}"
+                    if (params.BROWSER != 'all') {
+                        cmd += " --project=${params.BROWSER}"
+                    }
+                    sh(script: cmd, returnStatus: true)
+                }
+            }
+        }
+
+        stage('Merge Reports') {
+            steps {
+                sh 'node scripts/merge-reports.js --capture-failures || true'
+            }
+        }
+
+        stage('Rerun Failures') {
+            when { expression { fileExists('rerun.txt') } }
+            steps {
+                sh 'node scripts/rerun-failed.js --retries 1 || true'
+            }
+        }
+    }
+
+    post {
+        always {
+            publishHTML(target: [
+                reportDir: 'reports/html',
+                reportFiles: 'index.html',
+                reportName: 'Playwright Report',
+                keepAll: true
+            ])
+            archiveArtifacts(artifacts: 'reports/**/*', allowEmptyArchive: true)
+            cleanWs()
+        }
+    }
+}

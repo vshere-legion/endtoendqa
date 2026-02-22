@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Team-Specific Test Issue
+    url: https://github.com/legionco/playwright-automation-framework/discussions
+    about: For test failures in your team's features, post in Discussions first. File an issue only if it's a framework bug.
+  - name: Framework Documentation
+    url: https://github.com/legionco/playwright-automation-framework/tree/main/docs
+    about: Check the docs directory for architecture guides, migration help, and best practices before filing.

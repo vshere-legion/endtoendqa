@@ -1,0 +1,12 @@
+node_modules
+.git
+reports
+blob-reports
+test-results
+.features-gen
+.auth
+.locks
+*.log
+.DS_Store
+.env
+.env.local

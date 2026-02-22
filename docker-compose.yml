@@ -1,0 +1,112 @@
+# ─── Docker Compose for Playwright Test Execution ─────────
+#
+# Usage:
+#   docker compose up test-chromium          # Run chromium tests
+#   docker compose up test-all               # Run all browsers
+#   docker compose up test-smoke             # Run P1-Critical only
+#   docker compose --profile sharded up      # Run sharded execution
+#
+# Environment override:
+#   TEST_ENV=uat docker compose up test-chromium
+
+services:
+  # ─── Base test service (shared config) ──────────────────
+  test-base: &test-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./reports:/app/reports
+      - ./test-data:/app/test-data:ro
+      - ./config:/app/config:ro
+    environment:
+      - TEST_ENV=${TEST_ENV:-staging}
+      - ENTERPRISE=${ENTERPRISE:-LegionCoffee}
+      - WORKERS=${WORKERS:-4}
+      - RETRY_COUNT=${RETRY_COUNT:-1}
+      - CI=true
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_TO_FILE=true
+    networks:
+      - test-network
+    shm_size: '2gb'
+
+  # ─── Chromium Tests ─────────────────────────────────────
+  test-chromium:
+    <<: *test-base
+    command: ["--project=chromium"]
+
+  # ─── Firefox Tests ──────────────────────────────────────
+  test-firefox:
+    <<: *test-base
+    command: ["--project=firefox"]
+
+  # ─── WebKit Tests ───────────────────────────────────────
+  test-webkit:
+    <<: *test-base
+    command: ["--project=webkit"]
+
+  # ─── All Browsers ──────────────────────────────────────
+  test-all:
+    <<: *test-base
+    command: []
+
+  # ─── Smoke Tests (P1-Critical only) ────────────────────
+  test-smoke:
+    <<: *test-base
+    environment:
+      - TEST_ENV=${TEST_ENV:-staging}
+      - ENTERPRISE=${ENTERPRISE:-LegionCoffee}
+      - WORKERS=8
+      - CI=true
+      - TEST_TAGS=@P1-Critical
+
+  # ─── Team-Specific Tests ───────────────────────────────
+  test-team:
+    <<: *test-base
+    environment:
+      - TEST_ENV=${TEST_ENV:-staging}
+      - ENTERPRISE=${ENTERPRISE:-LegionCoffee}
+      - TEST_TEAM=${TEST_TEAM:-TNP}
+      - WORKERS=${WORKERS:-4}
+      - CI=true
+
+  # ─── Sharded Execution (for large suites) ──────────────
+  test-shard-1:
+    <<: *test-base
+    profiles: ["sharded"]
+    command: ["--shard=1/4"]
+
+  test-shard-2:
+    <<: *test-base
+    profiles: ["sharded"]
+    command: ["--shard=2/4"]
+
+  test-shard-3:
+    <<: *test-base
+    profiles: ["sharded"]
+    command: ["--shard=3/4"]
+
+  test-shard-4:
+    <<: *test-base
+    profiles: ["sharded"]
+    command: ["--shard=4/4"]
+
+  # ─── Report Merger (runs after sharded tests) ──────────
+  merge-reports:
+    <<: *test-base
+    profiles: ["sharded"]
+    entrypoint: ["node", "scripts/merge-reports.js"]
+    depends_on:
+      test-shard-1:
+        condition: service_completed_successfully
+      test-shard-2:
+        condition: service_completed_successfully
+      test-shard-3:
+        condition: service_completed_successfully
+      test-shard-4:
+        condition: service_completed_successfully
+
+networks:
+  test-network:
+    driver: bridge

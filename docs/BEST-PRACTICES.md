@@ -11,29 +11,33 @@ Patterns and anti-patterns for writing reliable, maintainable tests in this fram
 - **One concern per scenario.** Each scenario tests one thing. If a scenario has 15+ steps, split it.
 - **Use Background for shared setup.** If every scenario in a feature starts with login + location selection, put it in Background.
 - **Tag strategically.**
-  - `@smoke` — critical path (run on every PR)
-  - `@regression` — full suite (nightly)
+  - `@P1-Critical` — critical path, smoke tests (run on every PR)
+  - `@P2-High`, `@P3-Medium`, `@P4-Low` — priority levels
+  - `@Regression` — full regression suite (nightly)
+  - `@NewFeature` — new feature tests
+  - `@Team-{TEAM}` — team ownership (e.g., `@Team-SCH`)
+  - `@group-{GroupName}` — credential group for scoped lookup (e.g., `@group-P2PLGTest`)
+  - `@mode:serial` — share browser state across scenarios in the feature
   - `@wip` — work in progress (excluded from CI)
-  - `@TestRail_12345` — links to TestRail case
 
 ```gherkin
-@regression @TestRail_12345
+@P2-High @Regression @Team-SCH @group-P2PLGTest
 Feature: Schedule Publishing
 
   Background:
-    Given I login as 'StoreManager1'.
-    And I select location 'Automation1'.
+    Given I am logged in as "InternalAdmin"
 
-  @smoke
+  @P1-Critical
   Scenario: Publish current week schedule
-    When I navigate to schedule page
+    Given I navigate to the schedule page
+    When I navigate to next week
     Then I should see the weekly schedule
 ```
 
 ### DON'T
 
-- Don't write imperative steps (`click button X`, `enter text in field Y`). Write declarative steps (`I login as 'Admin'`).
-- Don't put test data in feature files. Use the data layer: `Given I login as 'StoreManager1'` resolves credentials from JSON.
+- Don't write imperative steps (`click button X`, `enter text in field Y`). Write declarative steps (`I am logged in as "Admin"`).
+- Don't put test data in feature files. Use the data layer: `Given I am logged in as "InternalAdmin"` resolves credentials from JSON via DataService.
 - Don't create one-scenario features. Group related scenarios together — they share Background setup and run sequentially within the feature.
 
 ---
@@ -53,8 +57,8 @@ Feature: Schedule Publishing
 
 - **Use DataService for credentials — never hardcode.**
   ```typescript
-  // GOOD: Data-driven
-  Given('I login as {string}.', async ({ testContext, page }, userType: string) => {
+  // GOOD: Data-driven (see shared/steps/auth.steps.ts for the real implementation)
+  Given('I am logged in as {string}', async ({ testContext, page }, userType: string) => {
     const user = testContext.dataService.getUILoginUserBy(userType);
     // login with user.name, user.password
   });
@@ -84,6 +88,14 @@ Feature: Schedule Publishing
 
 - Don't create steps that are only used once. If a step is feature-specific, put it in the team's step file, not shared.
 - Don't use `page.waitForTimeout()`. Use `page.waitForSelector()`, `expect(locator).toBeVisible()`, or Playwright's auto-waiting.
+- Don't use `locator.isVisible()` when you need to **wait** for an element. `isVisible()` returns immediately (no waiting). Use `locator.waitFor({ state: 'visible', timeout })` instead.
+  ```typescript
+  // BAD: Returns immediately — element may not have rendered yet
+  const visible = await locator.isVisible({ timeout: 3000 }); // timeout is IGNORED
+
+  // GOOD: Actually waits up to 10s for element to appear
+  await locator.waitFor({ state: 'visible', timeout: 10000 });
+  ```
 
 ---
 
@@ -105,10 +117,24 @@ Feature: Schedule Publishing
 
 - **Use data-testid selectors** when available. They're stable across UI changes.
 
+- **Use shared components for cross-team UI patterns** like navigation and location selection. These live in `shared/pages/components/` and are composable helpers (not page objects).
+  ```typescript
+  import { NavigationComponent } from '@shared/pages/components';
+
+  // Shared components receive a Page instance — no BasePage inheritance
+  const nav = new NavigationComponent(page);
+  await nav.clickScheduleTab();
+  ```
+
+  > **Timing note:** Shared components use Playwright's auto-wait (click/fill auto-retry).
+  > SCH's `ScheduleBasePage` uses explicit `waitForElementVisible(30s)` before actions.
+  > In `@mode:serial` chains where timing is critical, prefer team page objects over shared components until migration is validated.
+
 ### DON'T
 
 - Don't put assertions in page objects. Page objects describe *what you can do* on a page. Assertions belong in step definitions.
 - Don't pass raw Playwright `Page` between steps. Pass page objects via the fixture system.
+- Don't confuse shared components with page objects. Shared components (`NavigationComponent`, `LocationSelectorComponent`) are **composable helpers** — they don't extend BasePage and don't manage page lifecycle.
 
 ---
 
@@ -164,6 +190,7 @@ Feature: Schedule Publishing
 - Don't assume execution order across features. Feature A and Feature B may run on different workers in any order.
 - Don't rely on browser state from a previous scenario. If Scenario 3 fails, the framework recovers (navigates to dashboard). Scenario 4 must navigate to where it needs via its Given steps.
 - Don't skip scenarios based on previous failures. The framework never skips — it recovers and continues.
+- **Beware of `@mode:serial` cascading failures.** In serial mode, if any scenario fails, Playwright automatically **skips all subsequent scenarios** in the feature. This is native Playwright behavior. Ensure early scenarios are robust — a flaky step 2 will skip steps 3, 4, etc.
 - Don't create scenarios that clean up after other scenarios. Each feature's cleanup happens automatically when the feature ends (context closed, users/locations released).
 
 ---

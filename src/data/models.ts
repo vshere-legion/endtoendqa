@@ -151,6 +151,8 @@ export enum ContextKey {
 
   // API
   API_LAST_RESPONSE_MAP = 'API_LAST_RESPONSE_MAP',
+  SESSION_ID = 'SESSION_ID',
+  API_SESSION_ACTIVE = 'API_SESSION_ACTIVE',
 
   // Schedule / Shift
   SHIFT_ID = 'SHIFT_ID',

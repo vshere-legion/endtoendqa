@@ -21,7 +21,7 @@ This framework is shared by **11 teams**. These guidelines exist so we don't bre
 ```bash
 # 1. Clone and setup
 git clone <repo-url>
-cd playwright-cucumber-enterprise
+cd playwright-automation-framework
 npm ci
 npx playwright install --with-deps
 
@@ -155,7 +155,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/). Every commi
 | `ci` | `.github/`, `ci/` |
 | `scripts` | `scripts/` |
 | `sch` | `teams/sch/` |
-| `tnp` | `teams/TNP/` |
+| `ta` | `teams/ta/` |
 | `plt` | `teams/PLT-*` |
 | `lrb` | `teams/LRB/` |
 | `ev` | `teams/EV-*` |

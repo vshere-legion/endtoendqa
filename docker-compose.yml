@@ -67,7 +67,7 @@ services:
     environment:
       - TEST_ENV=${TEST_ENV:-staging}
       - ENTERPRISE=${ENTERPRISE:-LegionCoffee}
-      - TEST_TEAM=${TEST_TEAM:-TNP}
+      - TEST_TEAM=${TEST_TEAM:-TA}
       - WORKERS=${WORKERS:-4}
       - CI=true
 

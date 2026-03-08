@@ -391,7 +391,7 @@ public void afterStep(Scenario scenario) throws IOException, APIException {
 
 ### 3. Playwright + Cucumber Framework
 
-**Location:** `/Users/nishant/Documents/playwright-cucumber-legion-framework`
+**Location:** `playwright-automation-framework/`
 
 #### 3.1 Execution Entrypoints
 
@@ -399,15 +399,14 @@ public void afterStep(Scenario scenario) throws IOException, APIException {
 ```json
 {
   "scripts": {
-    "test": "playwright test",
-    "test:sch": "TEAM=sch npm test",
-    "test:smoke": "npm test -- --grep @smoke",
-    "test:parallel": "npm test -- --workers=4"
+    "test": "npm run bddgen && npx playwright test",
+    "test:smoke": "TEST_TAGS='@P1-Critical' npm test",
+    "test:parallel": "WORKERS=8 npm test"
   },
   "dependencies": {
-    "@playwright/test": "^1.40.0",
-    "playwright-bdd": "^6.1.0",
-    "@cucumber/cucumber": "^10.0.0"
+    "@playwright/test": "^1.50.0",
+    "playwright-bdd": "^8.4.2",
+    "@cucumber/cucumber": "^11.0.0"
   }
 }
 ```
@@ -460,7 +459,7 @@ npm test -- --workers=15
 HEADED=true npm test
 
 # Generate BDD test files
-npm run bdd:generate
+npm run bddgen
 ```
 
 #### 3.2 Parallel Strategy

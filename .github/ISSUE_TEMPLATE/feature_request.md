@@ -23,7 +23,7 @@ assignees: ''
 ## Consuming Teams
 <!-- Which teams would use this? Must be >1 for shared/core changes. -->
 - [ ] All teams
-- [ ] TNP
+- [ ] TA
 - [ ] SCH
 - [ ] PLT-Core / PLT-Int / PLT-Ops
 - [ ] LRB

@@ -16,7 +16,7 @@
 <!-- Which teams are impacted? Check all that apply. -->
 
 - [ ] All teams (core/shared change)
-- [ ] TNP
+- [ ] TA
 - [ ] SCH
 - [ ] PLT-Core / PLT-Int / PLT-Ops
 - [ ] LRB

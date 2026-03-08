@@ -5,6 +5,7 @@ const { Given, When, Then } = createBdd(test);
 import { LoginPageAdapter } from '../pages/LoginPageAdapter';
 import { DashboardPageAdapter } from '../pages/DashboardPageAdapter';
 import { SchedulePage } from '../pages/SchedulePage';
+import { P2PSchedulePage } from '../pages/P2PSchedulePage';
 import { Logger } from '../utils/logger';
 import { getCurrentTimestamp, formatDateForAPI } from '../utils/helpers';
 
@@ -140,14 +141,55 @@ Then('I should see the schedule hours on the smart card', async ({ pageManager, 
 // Scenario 2: Create Shift via UI
 // ═══════════════════════════════════════════════════════════════
 
-Given('I am on the schedule page from previous scenario', async ({ page }) => {
-  Logger.info('═══════════════════════════════════════════════════════════');
-  Logger.info('SCENARIO 2: CREATE UI SHIFT');
-  Logger.info('═══════════════════════════════════════════════════════════');
-  Logger.info('Reusing browser from Scenario 1');
-
+Given('I am on the schedule page from previous scenario', async ({ page, pageManager, testContext }) => {
   const currentUrl = page.url();
   Logger.info(`Current URL: ${currentUrl}`);
+
+  const isOnSchedule = currentUrl.includes('/schedule') || currentUrl.includes('/console');
+  const isFreshStart = currentUrl === 'about:blank' || currentUrl === '' || currentUrl.includes('/login');
+
+  if (isOnSchedule) {
+    // Happy path: reusing browser state from a previous scenario
+    Logger.info('Reusing browser from previous scenario — already on schedule page');
+    await page.waitForLoadState('domcontentloaded');
+    return;
+  }
+
+  if (isFreshStart) {
+    // Self-healing: running this scenario independently (no prior state)
+    Logger.info('No prior state detected — self-healing: navigating to schedule page');
+
+    // Navigate to schedule page (reuses the same logic as "I navigate to the schedule page")
+    const locationName = testContext.getContext<string>('locationName');
+    if (locationName && !testContext.getContext<boolean>('locationSelected')) {
+      Logger.step(`Selecting location: ${locationName}`);
+      const dashboardPage = pageManager.get(DashboardPageAdapter);
+      await dashboardPage.verifyDashboardLoaded();
+      await dashboardPage.searchSpecificLocationAndNavigateTo(locationName);
+      testContext.setContext('locationSelected', true);
+    }
+
+    const schedulePage = pageManager.get(P2PSchedulePage);
+    await schedulePage.navigateToSchedule();
+
+    // At P2P parent level, click Schedule tab and navigate to a peer location
+    // so that schedule controls (Edit, Publish, Filter, Group By) are available.
+    await schedulePage.clickOverviewTab();
+    await schedulePage.clickScheduleTab();
+    // applyLocationFilter detects parent level and navigates to Peer001
+    await schedulePage.applyLocationFilter();
+
+    // Ensure a schedule exists (generate if needed)
+    Logger.step('Ensuring schedule exists...');
+    await schedulePage.createScheduleIfNeeded();
+    Logger.pass('Self-healing complete — on schedule page with generated schedule');
+    return;
+  }
+
+  // On some other page (e.g., dashboard) — just navigate to schedule
+  Logger.info('Not on schedule page — navigating there');
+  const schedulePage = pageManager.get(P2PSchedulePage);
+  await schedulePage.navigateToSchedule();
   await page.waitForLoadState('domcontentloaded');
 });
 

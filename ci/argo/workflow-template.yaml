@@ -1,0 +1,430 @@
+# ─── Playwright BDD Tests — Reusable WorkflowTemplate ───────
+#
+# Contains all reusable templates for Playwright test execution on K8s.
+# Referenced by playwright-workflow.yaml (triggered by DevOps build pipeline).
+#
+# Install: argo template create ci/argo/workflow-template.yaml
+# Update:  argo template create ci/argo/workflow-template.yaml --overwrite
+#
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: playwright-bdd-tests
+  labels:
+    app: playwright-tests
+    team: qa
+spec:
+  # ─── Shared Volumes ─────────────────────────────────────────
+  # /dev/shm memory mount is required for Chromium in K8s
+  # (equivalent to Docker's shm_size: 2gb)
+  volumes:
+    - name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 2Gi
+
+  templates:
+    # ─── Quality Gate: Lint + TypeCheck ──────────────────────
+    - name: quality-gate
+      metadata:
+        labels:
+          stage: quality-gate
+      inputs:
+        parameters:
+          - name: image
+      container:
+        image: "{{inputs.parameters.image}}"
+        command: [sh, -c]
+        args:
+          - |
+            echo "=== Quality Gate ==="
+            npm run lint
+            npm run typecheck
+            echo "=== Quality Gate PASSED ==="
+        resources:
+          requests:
+            cpu: "500m"
+            memory: 1Gi
+          limits:
+            cpu: "1"
+            memory: 2Gi
+
+    # ─── BDD Generate ───────────────────────────────────────
+    - name: bddgen
+      metadata:
+        labels:
+          stage: bddgen
+      inputs:
+        parameters:
+          - name: image
+          - name: team
+            default: "all"
+          - name: tags
+            default: ""
+      container:
+        image: "{{inputs.parameters.image}}"
+        command: [sh, -c]
+        args:
+          - |
+            echo "=== BDD Generate ==="
+            echo "Team: ${TEST_TEAM}, Tags: ${TEST_TAGS}"
+            npx bddgen
+            echo "=== BDD Generate COMPLETE ==="
+            # Package generated specs for shard pods
+            tar czf /tmp/features-gen.tar.gz .features-gen/
+        env:
+          - name: TEST_TEAM
+            value: "{{inputs.parameters.team}}"
+          - name: TEST_TAGS
+            value: "{{inputs.parameters.tags}}"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: 1Gi
+          limits:
+            cpu: "1"
+            memory: 2Gi
+      outputs:
+        artifacts:
+          - name: features-gen
+            path: /tmp/features-gen.tar.gz
+            archive:
+              none: {}
+
+    # ─── Test Shard: Single Shard Execution ──────────────────
+    - name: test-shard
+      metadata:
+        labels:
+          stage: test
+      inputs:
+        parameters:
+          - name: image
+          - name: shard
+          - name: total-shards
+          - name: team
+            default: "all"
+          - name: environment
+            default: "staging"
+          - name: enterprise
+            default: "LegionCoffee"
+          - name: browser
+            default: "chromium"
+          - name: tags
+            default: ""
+          - name: workers
+            default: "4"
+          - name: retries
+            default: "2"
+          - name: timeout
+            default: "60000"
+        artifacts:
+          - name: features-gen
+            path: /tmp/features-gen.tar.gz
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi
+      container:
+        image: "{{inputs.parameters.image}}"
+        command: [sh, -c]
+        args:
+          - |
+            echo "============================================"
+            echo " Shard:       {{inputs.parameters.shard}}/{{inputs.parameters.total-shards}}"
+            echo " Team:        ${TEST_TEAM}"
+            echo " Environment: ${TEST_ENV}"
+            echo " Enterprise:  ${ENTERPRISE}"
+            echo " Browser:     {{inputs.parameters.browser}}"
+            echo " Tags:        ${TEST_TAGS}"
+            echo " Workers:     ${WORKERS}"
+            echo "============================================"
+
+            # Extract pre-generated BDD specs
+            tar xzf /tmp/features-gen.tar.gz -C /app/
+
+            # Build playwright command
+            SHARD_ARG=""
+            TOTAL="{{inputs.parameters.total-shards}}"
+            if [ "$TOTAL" -gt 1 ]; then
+              SHARD_ARG="--shard={{inputs.parameters.shard}}/${TOTAL}"
+            fi
+
+            BROWSER="{{inputs.parameters.browser}}"
+            PROJECT_ARG=""
+            if [ "$BROWSER" != "all" ]; then
+              PROJECT_ARG="--project=${BROWSER}"
+            fi
+
+            npx playwright test \
+              ${PROJECT_ARG} \
+              ${SHARD_ARG} \
+              --workers=${WORKERS} \
+              --retries=${RETRY_COUNT} \
+              --reporter=blob \
+              || true
+
+            # Package blob report for merge step
+            if [ -d "blob-report" ]; then
+              tar czf /tmp/blob-report.tar.gz blob-report/
+            else
+              echo "WARNING: No blob-report directory found"
+              mkdir -p blob-report
+              tar czf /tmp/blob-report.tar.gz blob-report/
+            fi
+
+            # Package test results (screenshots, traces, videos)
+            if [ -d "test-results" ]; then
+              tar czf /tmp/test-results.tar.gz test-results/
+            fi
+        env:
+          - name: TEST_ENV
+            value: "{{inputs.parameters.environment}}"
+          - name: ENTERPRISE
+            value: "{{inputs.parameters.enterprise}}"
+          - name: TEST_TEAM
+            value: "{{inputs.parameters.team}}"
+          - name: TEST_TAGS
+            value: "{{inputs.parameters.tags}}"
+          - name: WORKERS
+            value: "{{inputs.parameters.workers}}"
+          - name: RETRY_COUNT
+            value: "{{inputs.parameters.retries}}"
+          - name: TIMEOUT
+            value: "{{inputs.parameters.timeout}}"
+          - name: CI
+            value: "true"
+          - name: LOG_LEVEL
+            value: "INFO"
+          - name: LOG_TO_FILE
+            value: "true"
+          - name: TESTRAIL_ENABLED
+            valueFrom:
+              secretKeyRef:
+                name: playwright-secrets
+                key: TESTRAIL_ENABLED
+                optional: true
+          - name: TESTRAIL_USER
+            valueFrom:
+              secretKeyRef:
+                name: playwright-secrets
+                key: TESTRAIL_USER
+                optional: true
+          - name: TESTRAIL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: playwright-secrets
+                key: TESTRAIL_PASSWORD
+                optional: true
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
+        resources:
+          requests:
+            cpu: "1"
+            memory: 2Gi
+          limits:
+            cpu: "2"
+            memory: 4Gi
+      outputs:
+        artifacts:
+          - name: blob-report
+            path: /tmp/blob-report.tar.gz
+            archive:
+              none: {}
+            optional: true
+          - name: test-results
+            path: /tmp/test-results.tar.gz
+            archive:
+              none: {}
+            optional: true
+
+    # ─── Merge Reports: Combine All Shard Reports ────────────
+    - name: merge-reports
+      metadata:
+        labels:
+          stage: merge-reports
+      inputs:
+        parameters:
+          - name: image
+          - name: total-shards
+        artifacts:
+          - name: blob-reports
+            path: /tmp/blob-reports/
+      container:
+        image: "{{inputs.parameters.image}}"
+        command: [sh, -c]
+        args:
+          - |
+            echo "=== Merge Reports ==="
+            mkdir -p /app/blob-reports
+
+            # Extract all blob reports from shard artifacts
+            for f in /tmp/blob-reports/*.tar.gz; do
+              if [ -f "$f" ]; then
+                echo "Extracting: $f"
+                tar xzf "$f" -C /app/ 2>/dev/null || true
+              fi
+            done
+
+            ls -la /app/blob-reports/ || echo "No blob reports found"
+
+            # Merge reports
+            node scripts/merge-reports.js --capture-failures || true
+
+            # Package outputs
+            if [ -d "reports" ]; then
+              tar czf /tmp/merged-reports.tar.gz reports/
+            fi
+
+            # Check for rerun file
+            if [ -f "reports/rerun.txt" ] && [ -s "reports/rerun.txt" ]; then
+              echo "=== Failed tests found ==="
+              cat reports/rerun.txt
+              cp reports/rerun.txt /tmp/rerun.txt
+            else
+              echo "=== No failures to rerun ==="
+              echo "" > /tmp/rerun.txt
+            fi
+
+            echo "=== Merge Reports COMPLETE ==="
+        resources:
+          requests:
+            cpu: "500m"
+            memory: 1Gi
+          limits:
+            cpu: "1"
+            memory: 2Gi
+      outputs:
+        artifacts:
+          - name: merged-reports
+            path: /tmp/merged-reports.tar.gz
+            archive:
+              none: {}
+            optional: true
+          - name: rerun-file
+            path: /tmp/rerun.txt
+            archive:
+              none: {}
+            optional: true
+
+    # ─── Rerun Failures: Retry Failed Tests ──────────────────
+    - name: rerun-failures
+      metadata:
+        labels:
+          stage: rerun
+      inputs:
+        parameters:
+          - name: image
+          - name: environment
+            default: "staging"
+          - name: enterprise
+            default: "LegionCoffee"
+          - name: team
+            default: "all"
+          - name: browser
+            default: "chromium"
+        artifacts:
+          - name: rerun-file
+            path: /tmp/rerun.txt
+          - name: features-gen
+            path: /tmp/features-gen.tar.gz
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi
+      container:
+        image: "{{inputs.parameters.image}}"
+        command: [sh, -c]
+        args:
+          - |
+            # Check if there are failures to rerun
+            if [ ! -s /tmp/rerun.txt ]; then
+              echo "=== No failures to rerun. Skipping. ==="
+              exit 0
+            fi
+
+            echo "=== Rerunning Failed Tests ==="
+            cat /tmp/rerun.txt
+
+            # Extract BDD specs
+            tar xzf /tmp/features-gen.tar.gz -C /app/
+
+            # Copy rerun file
+            mkdir -p reports
+            cp /tmp/rerun.txt reports/rerun.txt
+
+            # Rerun failed tests
+            node scripts/rerun-failed.js --retries 1 --workers 2 || true
+
+            # Package rerun results
+            if [ -d "reports" ]; then
+              tar czf /tmp/rerun-results.tar.gz reports/
+            fi
+
+            echo "=== Rerun COMPLETE ==="
+        env:
+          - name: TEST_ENV
+            value: "{{inputs.parameters.environment}}"
+          - name: ENTERPRISE
+            value: "{{inputs.parameters.enterprise}}"
+          - name: TEST_TEAM
+            value: "{{inputs.parameters.team}}"
+          - name: CI
+            value: "true"
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
+        resources:
+          requests:
+            cpu: "1"
+            memory: 2Gi
+          limits:
+            cpu: "2"
+            memory: 4Gi
+      outputs:
+        artifacts:
+          - name: rerun-results
+            path: /tmp/rerun-results.tar.gz
+            archive:
+              none: {}
+            optional: true
+
+    # ─── Notify: Slack Notification (Exit Handler) ───────────
+    - name: notify
+      metadata:
+        labels:
+          stage: notify
+      inputs:
+        parameters:
+          - name: image
+          - name: workflow-status
+          - name: workflow-name
+      container:
+        image: "{{inputs.parameters.image}}"
+        command: [sh, -c]
+        args:
+          - |
+            echo "=== Sending Notification ==="
+            echo "Workflow: {{inputs.parameters.workflow-name}}"
+            echo "Status:   {{inputs.parameters.workflow-status}}"
+            node ci/scripts/slack-notify.js || echo "Slack notification skipped"
+        env:
+          - name: TEST_RESULT
+            value: "{{inputs.parameters.workflow-status}}"
+          - name: GITHUB_RUN_URL
+            value: ""
+          - name: SLACK_WEBHOOK_URL
+            valueFrom:
+              secretKeyRef:
+                name: playwright-secrets
+                key: SLACK_WEBHOOK_URL
+                optional: true
+        resources:
+          requests:
+            cpu: "100m"
+            memory: 256Mi
+          limits:
+            cpu: "200m"
+            memory: 512Mi

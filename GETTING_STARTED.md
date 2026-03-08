@@ -1,16 +1,16 @@
 # Getting Started - Complete Setup Guide
 
-## 🚀 Quick Start (5 Minutes)
+## Quick Start (5 Minutes)
 
 ### Prerequisites
-- Node.js 18+ installed
-- npm or yarn installed
+- Node.js 18+ installed (prefer 20.x)
+- npm installed
 - Git installed
 
-### Step 1: Install Dependencies (2 minutes)
+### Step 1: Install Dependencies
 
 ```bash
-cd /Users/nishant/Documents/playwright-cucumber-legion-framework
+cd playwright-automation-framework
 
 # Install all dependencies
 npm install
@@ -19,115 +19,137 @@ npm install
 npx playwright install chromium
 ```
 
-### Step 2: Verify Installation (1 minute)
+### Step 2: Verify Installation
 
 ```bash
-# Check if everything is installed correctly
+# Check Playwright version
 npx playwright --version
-# Should output: Version 1.40.0 (or similar)
+# Should output: Version 1.50.0 (or similar)
+
+# Check TypeScript
+npx tsc --version
+# Should output: Version 5.7.x
 
 # Check if scripts are executable
 ls -la scripts/*.js
-# Should show executable permissions (x)
 ```
 
-### Step 3: Run Your First Test (2 minutes)
+### Step 3: Configure Environment
+
+```bash
+# Copy the example env file
+cp .env.example .env
+
+# Edit .env with your settings (minimum required):
+# TEST_ENV=rc
+# ENTERPRISE=LegionCoffee
+```
+
+**Important:** `TEST_ENV=rc` must be set for running tests. The default `dev` environment is unreachable.
+
+### Step 4: Run Your First Test
 
 ```bash
 # Generate BDD test files from features
-npm run bdd:generate
+npm run bddgen
 
-# Run a simple test
-npm test -- teams/sch/features/ui/scheduling.feature
-
-# Or run all tests
+# Run all tests
 npm test
+
+# Or run a specific team
+TEST_TEAM=sch npm test
 ```
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-playwright-cucumber-legion-framework/
+playwright-automation-framework/
+├── config/                         # Environment configs & framework constants
+│   ├── environments/               # dev.env, staging.env, rc.env, uat.env, prod.env
+│   ├── env-manager.ts              # Dynamic env loader with validation
+│   ├── env.config.json             # Environment configuration map
+│   ├── framework.config.ts         # Teams, tags, timeouts, browsers
+│   └── testrail.config.json        # TestRail integration config
+│
+├── src/                            # Core framework
+│   ├── auth/                       # Global setup (health checks), teardown
+│   ├── config/                     # Environment config, reporters
+│   ├── data/                       # DataService, TestContext, FileLock, models
+│   ├── fixtures/                   # test-fixtures.ts (serial + default modes)
+│   ├── integrations/testrail/      # TestRail API integration
+│   ├── pages/                      # Base page objects (BasePage, LoginPage, DashboardPage)
+│   ├── steps/                      # Core step definitions
+│   └── utils/                      # Logger, wait-helper, api-helper, file-helper
+│
+├── shared/                         # Team-agnostic shared components
+│   ├── api/                        # BaseAPI.ts
+│   ├── pages/                      # Shared BasePage, LoginPage
+│   ├── steps/                      # auth.steps.ts (idempotent login)
+│   └── utils/                      # date.util.ts, string.util.ts
+│
 ├── teams/                          # Team-specific tests
-│   ├── sch/                       # Scheduling team
-│   │   ├── features/
-│   │   │   ├── ui/               # UI tests
-│   │   │   │   └── scheduling.feature
-│   │   │   └── api/              # API tests
-│   │   ├── steps/                # Step definitions
-│   │   ├── pages/                # Page objects
-│   │   └── test-data/            # Test data
-│   └── [other-teams]/
+│   ├── sch/                        # Scheduling (most mature)
+│   │   ├── features/ui/            # 16 UI feature files
+│   │   ├── steps/                  # 7 step definition files
+│   │   ├── pages/                  # 9 page objects
+│   │   ├── api/                    # Schedule API client
+│   │   ├── utils/                  # Config, credentials, helpers
+│   │   └── config.ts              # Team config
+│   ├── ta/                         # Time & Attendance
+│   ├── EPR/                        # Enterprise Reporting
+│   └── ...                         # PLT-Core, PLT-Int, PLT-Ops, LRB, EV-Com, EV-LIP, EV-ELM, GENAI
 │
-├── shared/                        # Shared utilities
-│   ├── steps/                    # Common step definitions
-│   ├── pages/                    # Common page objects
-│   └── utils/                    # Utilities
+├── test-data/users/                # Environment-specific credential JSONs
+│   └── user_loc_{ENTERPRISE}_{ENV}.json
 │
-├── src/                          # Core framework
-│   ├── config/                   # Configuration
-│   ├── fixtures/                 # Playwright fixtures
-│   │   └── test-fixtures.ts
-│   ├── pages/                    # Base page objects
-│   │   ├── base/
-│   │   │   └── BasePage.ts
-│   │   └── auth/
-│   │       └── LoginPage.ts
-│   ├── steps/                    # Core step definitions
-│   └── utils/                    # Core utilities
-│       └── Logger.ts
+├── scripts/                        # Execution & scaffolding scripts
+│   ├── run-sharded.js              # Feature-level sharded execution
+│   ├── run-split-scenarios.js      # Tag-based scenario splitting
+│   ├── merge-reports.js            # Merge shard reports
+│   ├── rerun-failed.js             # Rerun failed tests
+│   ├── create-team.js              # Scaffold new team
+│   └── create-feature.js           # Scaffold new feature
 │
-├── scripts/                      # Execution scripts
-│   ├── run-sharded.js           # Feature-level sharding
-│   ├── merge-reports.js         # Report merging
-│   └── rerun-failed.js          # Rerun failed tests
-│
-├── docs/                         # Documentation
-│   ├── PARALLELIZATION_ANALYSIS.md
-│   ├── SHARDED_EXECUTION_GUIDE.md
-│   ├── CUCUMBER_TESTNG_VS_PLAYWRIGHT_BDD.md
-│   └── PARALLELIZATION_APPROACHES_COMPARISON.md
-│
-├── reports/                      # Test reports (generated)
-│   ├── merged/                   # Merged reports
-│   └── rerun.txt                # Failed tests
-│
-├── blob-reports/                 # Blob reports (generated)
-│
-├── playwright.config.ts          # Playwright configuration
-├── package.json                  # Dependencies & scripts
-├── tsconfig.json                # TypeScript configuration
-├── .env                         # Environment variables
-└── IMPLEMENTATION_SUMMARY.md    # Complete documentation
-
+├── docs/                           # Comprehensive documentation (12 files)
+├── reports/                        # Generated: html, json, junit, cucumber
+├── .features-gen/                  # Generated: playwright-bdd spec files (DO NOT EDIT)
+├── playwright.config.ts            # Main Playwright config
+├── package.json                    # Dependencies & scripts
+├── tsconfig.json                   # TypeScript config (path aliases, strict mode)
+└── .env.example                    # All environment variables documented
 ```
 
 ---
 
-## 🎯 Common Commands
+## Common Commands
 
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run all tests (generates BDD specs first)
 npm test
 
 # Run specific team
-TEAM=sch npm test
+TEST_TEAM=sch npm test
 
 # Run with tag filter
-npm test -- --grep @smoke
+TEST_TAGS="@P1-Critical" npm test
 
 # Run in headed mode (see browser)
-npm test -- --headed
+HEADED=true npm test
 
 # Run in debug mode
-npm test -- --debug
+npm run test:debug
 
 # Run in UI mode (interactive)
-npm test -- --ui
+npm run test:ui
+
+# Run specific browser
+npm run test:chromium
+npm run test:firefox
+npm run test:webkit
 ```
 
 ### Sharded Execution (Parallel)
@@ -140,9 +162,9 @@ npm run test:sharded:smoke
 npm run test:sharded:regression
 
 # Custom execution
-node scripts/run-sharded.js --tags "@smoke" --workers 15
+node scripts/run-sharded.js --tags "@P1-Critical" --workers 15
 
-# Dry run (see execution plan)
+# Dry run (see execution plan without running)
 npm run test:dry-run
 ```
 
@@ -158,437 +180,236 @@ npm run merge-reports:failures
 # Open HTML report
 npm run report:open
 
-# View specific report
-open reports/merged/html/index.html
-```
-
-### Failure Management
-
-```bash
 # Rerun failed tests
 npm run rerun-failed
-
-# Rerun with more retries
-node scripts/rerun-failed.js --retries 3
-
-# Check rerun file
-cat reports/rerun.txt
 ```
 
-### Debugging
+### Code Quality
 
 ```bash
-# Show trace viewer
-npx playwright show-trace trace.zip
+# TypeScript type check
+npm run typecheck
 
-# Generate code from browser actions
-npx playwright codegen https://your-app.com
+# ESLint
+npm run lint
+npm run lint:fix
 
-# Run specific test in debug mode
-npm test -- teams/sch/features/ui/scheduling.feature --debug
+# Prettier
+npm run format
+npm run format:check
 
-# Run in UI mode (best for debugging)
-npm test -- --ui
+# All checks
+npm run typecheck && npm run lint
 ```
 
 ---
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory (see `.env.example` for all options):
 
 ```bash
-# .env
-BASE_URL=https://staging.example.com
-TEST_ENV=staging
-TEAM=sch
-HEADLESS=true
-CI=false
+# Environment
+TEST_ENV=rc                     # dev, staging, rc, uat, prod
+ENTERPRISE=LegionCoffee         # Enterprise name (maps to test data file)
+
+# Test Selection
+TEST_TEAM=all                   # Specific team or 'all'
+TYPE=all                        # ui, api, or all
+TEST_TAGS=@P1-Critical          # Cucumber tag expression
+
+# Execution
+HEADED=false                    # Show browser
+WORKERS=2                       # Parallel workers (CI: 4)
+RETRY_COUNT=1                   # Retries (CI: 2)
+TIMEOUT=60000                   # Test timeout in ms
+
+# Auth
+AUTH_ROLES=Admin                # Comma-separated roles
+FRESH_AUTH=false                # Clear stale sessions
+
+# Logging
+LOG_LEVEL=INFO                  # DEBUG, INFO, WARN, ERROR, FATAL
+LOG_TO_FILE=true                # Write JSON logs to reports/logs/
 ```
 
 ### Playwright Configuration
 
-Edit `playwright.config.ts`:
+The `playwright.config.ts` is env-var driven. Key settings:
 
-```typescript
-export default defineConfig({
-  testDir,
-  fullyParallel: true,
-  workers: process.env.CI ? 4 : 2,  // Adjust worker count
-  retries: process.env.CI ? 2 : 1,   // Adjust retry count
-  timeout: 60 * 1000,                // Test timeout
-
-  use: {
-    baseURL: process.env.BASE_URL || 'https://staging.example.com',
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-  },
-});
-```
+| Setting | Env Var | Default |
+|---------|---------|---------|
+| Environment | `TEST_ENV` | `dev` |
+| Team filter | `TEST_TEAM` or `TEAM` | `all` |
+| Type filter | `TYPE` | `all` |
+| Parallel mode | `PARALLEL_MODE` | `feature` |
+| Workers | `WORKERS` | CI: 4, local: 2 |
+| Retries | `RETRY_COUNT` | CI: 2, local: 1 |
+| Timeout | `TIMEOUT` | 60000ms |
+| Base URL | `BASE_URL` | `https://staging-enterprise.dev.legion.work/` |
+| Viewport | — | 1920x1080 |
 
 ---
 
-## 📝 Writing Tests
+## Writing Tests
 
 ### 1. Create a Feature File
 
 ```gherkin
-# teams/sch/features/ui/scheduling.feature
-@sch @scheduling @smoke
+# teams/<team>/features/ui/<feature>.feature
+@P2-High @Regression @Team-SCH @group-P2PLGTest
 Feature: Schedule Management
 
   Background:
-    Given I am logged in as a manager
+    Given I am logged in as "InternalAdmin"
 
-  @positive
-  Scenario: Create a new schedule
-    Given I am on the schedules page
-    When I create a schedule with name "Test Schedule"
-    Then I should see the schedule "Test Schedule" in the list
-    And the schedule status should be "Draft"
-
-  @positive
-  Scenario: Edit existing schedule
-    Given I am on the schedules page
-    And a schedule "Existing Schedule" exists
-    When I edit the schedule "Existing Schedule"
-    And I change the name to "Updated Schedule"
-    Then I should see the schedule "Updated Schedule" in the list
+  Scenario: Create schedule for next week
+    Given I navigate to the schedule page
+    When I create a schedule for next week
+    Then the schedule should be generated successfully
 ```
+
+**Tag taxonomy:**
+- Priority: `@P1-Critical`, `@P2-High`, `@P3-Medium`, `@P4-Low`
+- Suite: `@Regression`, `@NewFeature`
+- Team: `@Team-{TEAM}` (e.g., `@Team-SCH`)
+- Credential group: `@group-{GroupName}` (e.g., `@group-P2PLGTest`)
+- Mode: `@mode:serial` (share browser state across scenarios)
 
 ### 2. Create Step Definitions
 
 ```typescript
-// teams/sch/steps/scheduling.steps.ts
-import { Given, When, Then } from '@cucumber/cucumber';
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+// teams/<team>/steps/<feature>.steps.ts
+import { Given, When, Then } from 'playwright-bdd';
 
-Given('I am on the schedules page', async ({ page, schedulePage }) => {
-  await schedulePage.goto();
+Given('I navigate to the schedule page', async ({ page, pageManager }) => {
+  const schedulePage = pageManager.get(SchedulePage);
+  await schedulePage.navigateToSchedule();
 });
 
-When('I create a schedule with name {string}',
-  async ({ schedulePage }, name: string) => {
-    await schedulePage.createSchedule(name);
+When('I create a schedule for next week', async ({ page, pageManager }) => {
+  const schedulePage = pageManager.get(SchedulePage);
+  await schedulePage.navigateToNextWeek();
+  await schedulePage.createSchedule();
 });
 
-Then('I should see the schedule {string} in the list',
-  async ({ schedulePage }, name: string) => {
-    const isVisible = await schedulePage.isScheduleVisible(name);
-    expect(isVisible).toBeTruthy();
+Then('the schedule should be generated successfully', async ({ page }) => {
+  await expect(page.locator('.schedule-generated')).toBeVisible();
 });
 ```
 
-### 3. Create Page Object
+### 3. Create Page Objects
 
 ```typescript
-// teams/sch/pages/SchedulePage.ts
+// teams/<team>/pages/<Page>.ts
 import { Page } from '@playwright/test';
-import { BasePage } from '../../../src/pages/base/BasePage';
+import { BasePage } from '@core/pages/base/BasePage';
 
 export class SchedulePage extends BasePage {
   constructor(page: Page) {
     super(page);
   }
 
-  async goto() {
-    await this.page.goto('/schedules');
+  async navigateToSchedule() {
+    await this.navigate('/schedule');
   }
 
-  async createSchedule(name: string) {
-    await this.page.click('[data-testid="create-schedule-btn"]');
-    await this.page.fill('[data-testid="schedule-name-input"]', name);
-    await this.page.click('[data-testid="save-btn"]');
-  }
-
-  async isScheduleVisible(name: string): Promise<boolean> {
-    const locator = this.page.locator(`text=${name}`);
-    return await locator.isVisible();
+  async createSchedule() {
+    await this.page.click('[data-testid="create-btn"]');
+    await this.page.waitForSelector('.schedule-generated');
   }
 }
 ```
 
-### 4. Generate BDD Tests
+### 4. Generate and Run
 
 ```bash
 # Generate Playwright test files from feature files
-npm run bdd:generate
-```
+npm run bddgen
 
-### 5. Run Your Tests
+# Run your tests
+npm test
 
-```bash
-# Run specific feature
-npm test -- teams/sch/features/ui/scheduling.feature
-
-# Run with tag
-npm test -- --grep @smoke
-
-# Run in UI mode
-npm test -- --ui
+# Or run specific feature
+npm test -- --grep "Schedule Management"
 ```
 
 ---
 
-## 🎓 Best Practices
+## Adding a New Team
 
-### 1. Feature File Organization
+Use the scaffolding script:
 
-**✅ Good:**
-```
-teams/sch/features/
-  scheduling/
-    create-schedule.feature     # 5-8 scenarios
-    edit-schedule.feature       # 4-6 scenarios
-    delete-schedule.feature     # 3-5 scenarios
+```bash
+node scripts/create-team.js <TEAM>
 ```
 
-**❌ Bad:**
+This creates:
 ```
-teams/sch/features/
-  scheduling.feature  # 100 scenarios (too large!)
-```
-
-### 2. Scenario Independence
-
-**✅ Good:**
-```gherkin
-Scenario: Create user
-  Given I generate unique user data
-  When I create a user
-  Then user should exist
+teams/<TEAM>/
+  features/ui/
+  features/api/
+  pages/
+  steps/
+  test-data/
+  api/
+  utils/
+  config.ts
+  README.md
 ```
 
-**❌ Bad:**
-```gherkin
-Scenario: Create user
-  When I create user "john@example.com"
+## Adding a New Feature
 
-Scenario: Edit user
-  When I edit user "john@example.com"  # Depends on previous!
-```
-
-### 3. Tag Strategy
-
-```gherkin
-@sch @scheduling @smoke @P0
-Feature: Schedule Management
-
-  @positive
-  Scenario: Create schedule
-
-  @negative @edge-case
-  Scenario: Invalid schedule data
-```
-
-**Tag Hierarchy:**
-- `@team-name` - Team ownership
-- `@feature-area` - Feature category
-- `@smoke` / `@regression` - Suite type
-- `@P0` / `@P1` / `@P2` - Priority
-- `@positive` / `@negative` - Test type
-
----
-
-## 🔄 CI/CD Integration
-
-### GitHub Actions
-
-Create `.github/workflows/test.yml`:
-
-```yaml
-name: Playwright Tests
-
-on:
-  push:
-    branches: [master, feature]
-  pull_request:
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run tests
-        run: npm run test:sharded:smoke
-
-      - name: Merge reports
-        if: always()
-        run: npm run merge-reports:failures
-
-      - name: Upload report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-report
-          path: reports/merged/html/
-          retention-days: 30
-```
-
-### Jenkins
-
-Create `Jenkinsfile`:
-
-```groovy
-pipeline {
-    agent any
-
-    environment {
-        NODE_VERSION = '20'
-    }
-
-    stages {
-        stage('Install') {
-            steps {
-                sh 'npm ci'
-                sh 'npx playwright install --with-deps chromium'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh 'npm run test:sharded:smoke'
-            }
-        }
-
-        stage('Report') {
-            steps {
-                sh 'npm run merge-reports:failures'
-            }
-        }
-    }
-
-    post {
-        always {
-            publishHTML([
-                reportDir: 'reports/merged/html',
-                reportFiles: 'index.html',
-                reportName: 'Test Report'
-            ])
-            junit 'reports/merged/junit.xml'
-        }
-    }
-}
+```bash
+node scripts/create-feature.js <team> <feature-name>
 ```
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
-### Issue: "playwright command not found"
-
+### "No tests found"
 ```bash
-# Install Playwright globally
-npm install -g @playwright/test
+# Regenerate BDD spec files
+npm run bddgen
 
-# Or use npx
-npx playwright --version
+# Check feature files exist
+ls teams/*/features/**/*.feature
 ```
 
-### Issue: "No tests found"
-
+### "Browser not found"
 ```bash
-# Generate BDD tests
-npm run bdd:generate
-
-# Check if feature files exist
-ls -la teams/**/features/**/*.feature
-```
-
-### Issue: "Browser not found"
-
-```bash
-# Install browsers
 npx playwright install chromium
-
-# Or install all browsers
-npx playwright install
+# Or install all browsers:
+npx playwright install --with-deps
 ```
 
-### Issue: "Permission denied" for scripts
+### Tests timeout or fail on login
+- Verify `TEST_ENV=rc` is set (not `dev`)
+- Check that credential files exist in `test-data/users/`
+- Verify the target environment is reachable
 
+### TypeScript errors
 ```bash
-# Make scripts executable
-chmod +x scripts/*.js
-```
-
-### Issue: Tests are slow
-
-```bash
-# Reduce worker count
-npm test -- --workers=5
-
-# Or adjust in playwright.config.ts
-workers: 5
+npm run typecheck
+# Known pre-existing errors in src/pages/auth/LoginPage.ts and src/integrations/testrail/
 ```
 
 ---
 
-## 📚 Next Steps
+## Next Steps
 
-1. **Read Documentation:**
-   - [SHARDED_EXECUTION_GUIDE.md](docs/SHARDED_EXECUTION_GUIDE.md) - Complete guide
-   - [PARALLELIZATION_ANALYSIS.md](docs/PARALLELIZATION_ANALYSIS.md) - Architecture details
-   - [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - Full summary
+1. Read the [Architecture docs](docs/ARCHITECTURE.md) for a full deep dive
+2. Explore `teams/sch/` as the reference implementation
+3. Review [Best Practices](docs/BEST-PRACTICES.md)
+4. Check [Data Layer](docs/DATA_LAYER.md) for credential management
+5. See [Sharded Execution Guide](docs/SHARDED_EXECUTION_GUIDE.md) for CI/CD
 
-2. **Explore Examples:**
-   - Check `teams/sch/features/` for example feature files
-   - Check `src/pages/` for page object examples
-   - Check `src/steps/` for step definition examples
+## Support
 
-3. **Customize:**
-   - Update `.env` with your environment URLs
-   - Add your team directories under `teams/`
-   - Create your feature files and page objects
-
-4. **Run Tests:**
-   ```bash
-   # Start with dry run
-   npm run test:dry-run
-
-   # Run smoke tests
-   npm run test:sharded:smoke
-
-   # View reports
-   npm run report:open
-   ```
-
----
-
-## 🎉 You're Ready!
-
-Your framework is now set up and ready to use. Start by:
-
-1. ✅ Creating your feature files in `teams/your-team/features/`
-2. ✅ Writing step definitions in `teams/your-team/steps/`
-3. ✅ Creating page objects in `teams/your-team/pages/`
-4. ✅ Running tests with `npm test` or `npm run test:sharded:smoke`
-
-**Happy Testing!** 🚀
-
----
-
-## 📞 Support
-
-For issues or questions:
-- Check the documentation in `docs/`
-- Review examples in `teams/sch/`
-- Refer to [Playwright Documentation](https://playwright.dev)
-- Refer to [playwright-bdd Documentation](https://vitalets.github.io/playwright-bdd)
+- Documentation: `docs/` directory (12 files, 316KB)
+- Reference team: `teams/sch/` (most mature)
+- [Playwright Documentation](https://playwright.dev)
+- [playwright-bdd Documentation](https://vitalets.github.io/playwright-bdd)

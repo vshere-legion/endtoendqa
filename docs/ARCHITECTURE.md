@@ -39,10 +39,10 @@
 │                     GLOBAL SETUP (runs ONCE)                             │
 │                                                                          │
 │  ┌─────────────────┐  ┌────────────────────┐  ┌──────────────────────┐  │
-│  │  Health Check    │  │  Pre-Authenticate   │  │  Config Validation   │  │
-│  │  (HEAD → baseUrl)│  │  (storageState per  │  │  (env-manager.ts)    │  │
-│  │  Fail-fast if    │  │   role: Admin, etc.) │  │  Load .env + config  │  │
-│  │  env unreachable │  │  Saves to .auth/     │  │  Validate required   │  │
+│  │  Health Check    │  │  Env Info Banner    │  │  Config Validation   │  │
+│  │  (HEAD → baseUrl)│  │  (print environment │  │  (env-manager.ts)    │  │
+│  │  Fail-fast if    │  │   name, URL, team)  │  │  Load .env + config  │  │
+│  │  env unreachable │  │                     │  │  Validate required   │  │
 │  └─────────────────┘  └────────────────────┘  └──────────────────────┘  │
 └──────────────────────────────┬──────────────────────────────────────────┘
                                │
@@ -88,6 +88,10 @@
 │  │  - Soft assertions (collect failures without stopping)           │   │
 │  ├──────────────────────────────────────────────────────────────────┤   │
 │  │  LoginPage    │  DashboardPage  │  SchedulePage  │  TeamPages    │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │  Shared UI Components (composable, receive Page instance)       │   │
+│  │  - NavigationComponent (sidebar nav + sub-tabs)                 │   │
+│  │  - LocationSelectorComponent (location search/chooser/district) │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
 └──────────────────────────────┬──────────────────────────────────────────┘
                                │
@@ -155,7 +159,7 @@
 ### Directory Structure
 
 ```
-playwright-cucumber-legion-framework-v2/
+playwright-automation-framework/
 ├── .github/workflows/
 │   └── playwright-tests.yml        ← GitHub Actions CI/CD pipeline
 ├── ci/
@@ -175,7 +179,7 @@ playwright-cucumber-legion-framework-v2/
 ├── src/
 │   ├── auth/
 │   │   ├── auth-manager.ts          ← Session reuse via storageState
-│   │   ├── global-setup.ts          ← Health check + pre-auth
+│   │   ├── global-setup.ts          ← Health check + env validation
 │   │   └── global-teardown.ts       ← Session + lock cleanup
 │   ├── config/
 │   │   ├── environment.ts           ← PropertyMap.java port
@@ -202,7 +206,7 @@ playwright-cucumber-legion-framework-v2/
 │   │   └── file-helper.ts
 │   └── steps/                       ← Shared step definitions
 ├── teams/                           ← 11 team directories
-│   ├── TNP/
+│   ├── ta/
 │   ├── SCH/
 │   ├── PLT-Core/
 │   ├── PLT-Int/
@@ -372,20 +376,13 @@ global-setup.ts
   │     └─→ If fails → process.exit(1)  (fail-fast)
   │     └─→ If 301/302 → treat as pass (redirect-based apps)
   │
-  ├─→ Pre-Authenticate Roles
-  │     └─→ AUTH_ROLES="Admin,StoreManager1" (comma-separated)
-  │     └─→ For each role:
-  │           ├─→ hasValidSession(role)?  → skip (reuse existing)
-  │           └─→ createAuthSession(role)
-  │                 ├─→ Launch headless chromium
-  │                 ├─→ Navigate to login URL
-  │                 ├─→ Fill username/password from DataService
-  │                 ├─→ Click submit, wait for dashboard
-  │                 ├─→ context.storageState({ path: '.auth/...' })
-  │                 ├─→ Save cookies + localStorage to disk
-  │                 └─→ Close browser
+  ├─→ Print Environment Info Banner
+  │     └─→ Prints environment name, base URL, team, worker count
   │
-  └─→ Print banner (environment, enterprise)
+  └─→ Validate Configuration
+        └─→ Warnings for missing optional vars (ENTERPRISE, AUTH_ROLES, etc.)
+        └─→ NOTE: No pre-authentication happens here. Each feature manages
+             its own login via the Background step (idempotent login pattern).
 ```
 
 ### Step 3: Test Execution (N workers in parallel)
@@ -400,7 +397,7 @@ Playwright Test Runner (fullyParallel: false)
         │
         ├─→ FEATURE START (first scenario triggers context creation)
         │     ├─→ context fixture detects new feature name
-        │     │     └─→ Creates BrowserContext with storageState (pre-auth cookies)
+        │     │     └─→ Creates fresh BrowserContext (clean slate, no pre-auth)
         │     ├─→ page fixture creates new Page (browser tab)
         │     └─→ testContext fixture creates new TestContext
         │           └─→ setContext(ENTERPRISE_NAME, 'LegionCoffee')
@@ -1263,7 +1260,7 @@ docker compose up test-chromium
   ▼
   1. BUILD (Dockerfile):
      │ Stage 1 (deps):
-     │   FROM mcr.microsoft.com/playwright:v1.40.0-jammy
+     │   FROM mcr.microsoft.com/playwright:v1.50.0-jammy
      │   COPY package.json → npm ci
      │
      │ Stage 2 (runner):
@@ -1324,7 +1321,7 @@ Sharded Docker execution:
 | `GuiceModule.java` | Absorbed into fixtures | 40 → 0 | Not needed |
 | `CredentialDataProvider.java` | **Not ported** | 80 → 0 | By design |
 | — (new) | `src/auth/auth-manager.ts` | — → 150 | Session reuse |
-| — (new) | `src/auth/global-setup.ts` | — → 68 | Health check + pre-auth |
+| — (new) | `src/auth/global-setup.ts` | — → 68 | Health check + env validation |
 | — (new) | `src/utils/Logger.ts` | — → 245 | Enterprise logger |
 | — (new) | `src/utils/api-helper.ts` | — → 319 | Enterprise API client |
 | — (new) | `src/pages/base/BasePage.ts` | — → 437 | Enterprise base page |
@@ -1372,7 +1369,7 @@ Sharded Docker execution:
 - Fixture lifecycle: create → populate → use → cleanup
 
 ### Phase 7: Enterprise Upgrades
-- **Auth/Session Reuse:** globalSetup pre-authenticates, storageState loaded into shared BrowserContext per feature (not per scenario)
+- **Auth/Session Reuse:** Idempotent login in Background step, shared BrowserContext per feature (not per scenario), session carries across scenarios in serial mode
 - **Enterprise Logger:** Structured JSON, correlation IDs, 5 log levels, step timing, sensitive masking
 - **Enterprise API Helper:** Retry with exponential backoff, 401 token refresh, typed ApiResult<T>
 - **Enterprise BasePage:** 40+ methods, retry engine, auto-screenshot, soft assertions, table/iframe helpers
@@ -1418,7 +1415,7 @@ Sharded Docker execution:
 | File | Layer | Purpose |
 |---|---|---|
 | `src/auth/auth-manager.ts` | Auth | Session reuse via Playwright storageState |
-| `src/auth/global-setup.ts` | Auth | Health check + pre-authentication (runs once) |
+| `src/auth/global-setup.ts` | Auth | Health check + env validation (runs once, no pre-auth) |
 | `src/auth/global-teardown.ts` | Auth | Cleanup sessions + locks (runs once) |
 | `src/config/environment.ts` | Config | PropertyMap port — resolves env, enterprise, URLs |
 | `config/env-manager.ts` | Config | Loads per-environment .env files |

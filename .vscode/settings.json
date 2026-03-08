@@ -1,3 +1,14 @@
 {
-    "claudeCode.useTerminal": true
+    "claudeCode.useTerminal": true,
+    "cucumber.glue": [
+        "teams/*/steps/**/*.ts",
+        "shared/steps/**/*.ts",
+        "src/steps/**/*.ts"
+    ],
+    "cucumber.features": [
+        "teams/*/features/**/*.feature"
+    ],
+    "files.associations": {
+        "*.feature": "cucumber"
+    }
 }

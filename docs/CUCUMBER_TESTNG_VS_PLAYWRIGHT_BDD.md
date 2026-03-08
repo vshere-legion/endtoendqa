@@ -619,7 +619,7 @@ If you have existing Selenium + Cucumber tests:
 
 1. **Immediate Actions:**
    ```bash
-   cd /Users/nishant/Documents/playwright-cucumber-legion-framework
+   cd playwright-automation-framework
    npm install
    npm run test:dry-run
    npm run test:sharded:smoke

@@ -1,5 +1,5 @@
 export const TEAMS = [
-  'TNP', 'SCH', 'PLT-Core', 'PLT-Int', 'PLT-Ops',
+  'TA', 'SCH', 'PLT-Core', 'PLT-Int', 'PLT-Ops',
   'LRB', 'EV-Com', 'EV-LIP', 'EV-ELM', 'GENAI', 'EPR',
 ] as const;
 

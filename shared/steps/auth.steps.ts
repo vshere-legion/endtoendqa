@@ -24,8 +24,11 @@
 
 import { createBdd } from 'playwright-bdd';
 import { test } from '../../src/fixtures/test-fixtures';
+import { AuthApiClient } from '../api/auth-api-client';
+import { ContextKey } from '../../src/data/models';
+import { getEnvironmentConfig } from '../../src/config/environment';
 
-const { Given, When, After } = createBdd(test);
+const { Given, When, Before, After } = createBdd(test);
 
 // ─── Simple Role Map (Last-Resort Fallback) ──────────────────
 //
@@ -302,13 +305,205 @@ When('I logout and login as {string}', async function ({ page, testContext, $tag
   }
 });
 
+// ─── API Login Steps ──────────────────────────────────────────
+//
+// Port of LoginApiSteps.java from the CucumberTA framework.
+// These steps authenticate via REST API without needing a browser.
+// Session ID and access token are stored in TestContext for later use.
+//
+// Usage in feature files:
+//   Given I login as "Admin" via api
+//   Given I am logged in as "InternalAdmin" via api
+
+/**
+ * Perform API login and store session in TestContext.
+ *
+ * Resolves credentials via DataService (API_LOGIN users), calls the
+ * /authentication/v2/user/login endpoint, and stores sessionId + accessToken.
+ */
+async function performApiLogin(
+  testContext: import('../../src/data/test-context').TestContext,
+  userType: string,
+  credentialGroup?: string,
+): Promise<void> {
+  const ds = testContext.dataService;
+  if (!ds.hasData()) {
+    throw new Error(
+      `[Auth] DataService has no data. Set ENTERPRISE env var to use API login steps.`,
+    );
+  }
+
+  // Resolve API credentials (group-scoped or ungrouped)
+  const user = credentialGroup
+    ? ds.getAPILoginUserByTypeAndGroup(userType, credentialGroup)
+    : ds.getAPILoginUserBy(userType);
+
+  console.log(`[Auth] API login as ${userType}: ${user.name}`);
+
+  const envConfig = getEnvironmentConfig();
+  const enterpriseName = envConfig.enterprise;
+  const enterpriseId = ds.getEnterpriseId();
+
+  const authApi = new AuthApiClient();
+  const { sessionId } = await authApi.loginForSessionId(
+    enterpriseName,
+    enterpriseId,
+    user.name,
+    user.password,
+  );
+
+  // Store session in TestContext for subsequent API steps
+  testContext.setContext(ContextKey.SESSION_ID, sessionId);
+  testContext.setContext(ContextKey.USER_NAME, user.name);
+  testContext.setContext(ContextKey.USER_PASSWORD, user.password);
+  testContext.setContext(ContextKey.API_SESSION_ACTIVE, true);
+
+  if (user.locations && user.locations.length > 0) {
+    testContext.setContext(ContextKey.LOCATION_NAME, user.locations[0]);
+  }
+
+  // Optionally generate access token
+  try {
+    const { accessToken } = await authApi.createOrUpdateToken(sessionId);
+    testContext.setContext(ContextKey.ACCESS_TOKEN, accessToken);
+  } catch (err) {
+    console.log(`[Auth] Token generation skipped: ${(err as Error).message}`);
+  }
+}
+
+/**
+ * CucumberTA-style API login step.
+ *
+ * Port of: LoginApiSteps.givenIloginAPI()
+ *   Given I login as '<userType>' via api.
+ *
+ * Usage:
+ *   Given I login as "Admin" via api
+ */
+Given('I login as {string} via api', async ({ testContext }, userType: string) => {
+  await performApiLogin(testContext, userType);
+});
+
+/**
+ * Idempotent API login step — safe to use in Background blocks.
+ *
+ * Supports @group-<name> credential scoping (same as UI login).
+ * If an API session is already active, skips re-authentication.
+ *
+ * Usage:
+ *   @group-P2PLGTest
+ *   Feature: P2P API Tests
+ *     Background:
+ *       Given I am logged in as "InternalAdmin" via api
+ */
+Given(
+  'I am logged in as {string} via api',
+  async function ({ testContext, $tags }, role: string) {
+    // Already authenticated via API — skip
+    if (testContext.getContext<boolean>(ContextKey.API_SESSION_ACTIVE)) {
+      return;
+    }
+
+    const credentialGroup = extractCredentialGroup($tags);
+    await performApiLogin(testContext, role, credentialGroup);
+  },
+);
+
+/**
+ * Generate access token step (for scenarios that need it explicitly).
+ *
+ * Port of: LoginApiSteps.iGenerateTheTokenForTimeClocksApi()
+ *
+ * Usage:
+ *   Given I generate the access token for api
+ */
+Given('I generate the access token for api', async ({ testContext }) => {
+  const sessionId = testContext.getContext<string>(ContextKey.SESSION_ID);
+  if (!sessionId) {
+    throw new Error('[Auth] No active API session. Login via API first.');
+  }
+
+  const authApi = new AuthApiClient();
+  const { accessToken } = await authApi.createOrUpdateToken(sessionId);
+  testContext.setContext(ContextKey.ACCESS_TOKEN, accessToken);
+  console.log('[Auth] Access token generated successfully');
+});
+
+// ─── @ApiLogin Hook ────────────────────────────────────────────
+//
+// Port of Hook.java @Before("@ApiLogin") from CucumberTA.
+// Automatically authenticates via API before any scenario in a
+// feature tagged with @ApiLogin — no explicit login step needed.
+//
+// Usage:
+//   @ApiLogin @group-P2PLGTest
+//   Feature: P2P API Tests
+//     Scenario: Verify schedule via API
+//       When I call the schedule API
+//
+// The hook uses getAdminGeneralUser() (API_LOGIN_GENERAL) by default,
+// matching the CucumberTA behavior where @ApiLogin always logs in as
+// the general admin user.
+
+Before({ tags: '@ApiLogin' }, async function ({ testContext, $tags }) {
+  // Already authenticated — skip (idempotent)
+  if (testContext.getContext<boolean>(ContextKey.API_SESSION_ACTIVE)) {
+    return;
+  }
+
+  const ds = testContext.dataService;
+  if (!ds.hasData()) {
+    throw new Error('[Auth] @ApiLogin hook: DataService has no data. Set ENTERPRISE env var.');
+  }
+
+  const envConfig = getEnvironmentConfig();
+  const enterpriseName = envConfig.enterprise;
+  const enterpriseId = ds.getEnterpriseId();
+
+  // Use admin general user (API_LOGIN_GENERAL) — matching CucumberTA behavior
+  const user = ds.getAdminGeneralUser();
+  console.log(`[Auth] @ApiLogin hook: authenticating as ${user.name}`);
+
+  const authApi = new AuthApiClient();
+  const { sessionId } = await authApi.loginForSessionId(
+    enterpriseName,
+    enterpriseId,
+    user.name,
+    user.password,
+  );
+
+  testContext.setContext(ContextKey.SESSION_ID, sessionId);
+  testContext.setContext(ContextKey.USER_NAME, user.name);
+  testContext.setContext(ContextKey.USER_PASSWORD, user.password);
+  testContext.setContext(ContextKey.API_SESSION_ACTIVE, true);
+
+  if (user.locations && user.locations.length > 0) {
+    testContext.setContext(ContextKey.LOCATION_NAME, user.locations[0]);
+  }
+
+  // Generate access token
+  try {
+    const { accessToken } = await authApi.createOrUpdateToken(sessionId);
+    testContext.setContext(ContextKey.ACCESS_TOKEN, accessToken);
+  } catch (err) {
+    console.log(`[Auth] @ApiLogin token generation skipped: ${(err as Error).message}`);
+  }
+});
+
 // ─── Cleanup Hook ───────────────────────────────────────────
 
 /**
- * After each scenario, release DataService credentials so they
- * can be reused by other workers in parallel execution.
+ * After each scenario, release DataService credentials and
+ * logout API session if active.
  */
 After(async function ({ testContext }) {
+  // Logout API session if active
+  const sessionId = testContext.getContext<string>(ContextKey.SESSION_ID);
+  if (sessionId) {
+    const authApi = new AuthApiClient();
+    await authApi.logout(sessionId);
+  }
+
   const ds = testContext.dataService;
   ds.releaseLocationAndUsers();
 });

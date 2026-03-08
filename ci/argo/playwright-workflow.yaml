@@ -1,0 +1,205 @@
+# ─── Playwright BDD Tests — Main DAG Workflow ───────────────
+#
+# Triggered by DevOps build pipeline after deployment completes.
+# The build pipeline passes the Docker image tag as a parameter.
+#
+# Pipeline integration:
+#   Build → Docker Image → Deploy to Staging → Playwright Tests → Pipeline Completes
+#
+# Submit (called by DevOps pipeline):
+#   argo submit ci/argo/playwright-workflow.yaml \
+#     -p image=<ECR_URI>:<TAG> -p team=sch -p environment=staging -p shards=4
+#
+# Submit with tags:
+#   argo submit ci/argo/playwright-workflow.yaml \
+#     -p image=<ECR_URI>:<TAG> -p tags="@P1-Critical" -p shards=2
+#
+# Watch progress:
+#   argo watch @latest
+#
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: playwright-bdd-
+  labels:
+    app: playwright-tests
+    team: qa
+spec:
+  entrypoint: main
+  onExit: exit-handler
+
+  # ─── Parameters (passed by DevOps build pipeline) ───────────
+  arguments:
+    parameters:
+      - name: image
+        description: "Full ECR image URI passed by build pipeline (required)"
+      - name: team
+        value: "all"
+        enum:
+          - "all"
+          - "SCH"
+          - "TA"
+          - "PLT-Core"
+          - "PLT-Int"
+          - "PLT-Ops"
+          - "LRB"
+          - "EV-Com"
+          - "EV-LIP"
+          - "EV-ELM"
+          - "GENAI"
+          - "EPR"
+      - name: environment
+        value: "staging"
+        enum: ["dev", "staging", "rc", "uat", "prod"]
+      - name: enterprise
+        value: "LegionCoffee"
+      - name: browser
+        value: "chromium"
+        enum: ["chromium", "firefox", "webkit", "all"]
+      - name: tags
+        value: ""
+      - name: workers
+        value: "4"
+      - name: shards
+        value: "4"
+      - name: retries
+        value: "2"
+      - name: timeout
+        value: "60000"
+
+  # ─── Pod-level defaults ───────────────────────────────────
+  podGC:
+    strategy: OnWorkflowCompletion
+    deleteDelayDuration: 600s
+  ttlStrategy:
+    secondsAfterCompletion: 3600
+    secondsAfterFailure: 7200
+  activeDeadlineSeconds: 7200  # 2 hour max workflow duration
+
+  # ─── Shared volumes ──────────────────────────────────────
+  volumes:
+    - name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 2Gi
+
+  # ─── DAG: Main Pipeline ──────────────────────────────────
+  templates:
+    - name: main
+      dag:
+        tasks:
+          # Step 1: Quality Gate (lint + typecheck)
+          - name: quality-gate
+            templateRef:
+              name: playwright-bdd-tests
+              template: quality-gate
+            arguments:
+              parameters:
+                - name: image
+                  value: "{{workflow.parameters.image}}"
+
+          # Step 2: BDD Generate (produces .features-gen artifacts)
+          - name: bddgen
+            templateRef:
+              name: playwright-bdd-tests
+              template: bddgen
+            dependencies: [quality-gate]
+            arguments:
+              parameters:
+                - name: image
+                  value: "{{workflow.parameters.image}}"
+                - name: team
+                  value: "{{workflow.parameters.team}}"
+                - name: tags
+                  value: "{{workflow.parameters.tags}}"
+
+          # Step 3: Test Shards (parallel pods — one per shard)
+          - name: test-shards
+            templateRef:
+              name: playwright-bdd-tests
+              template: test-shard
+            dependencies: [bddgen]
+            withSequence:
+              count: "{{workflow.parameters.shards}}"
+              start: "1"
+            arguments:
+              parameters:
+                - name: image
+                  value: "{{workflow.parameters.image}}"
+                - name: shard
+                  value: "{{item}}"
+                - name: total-shards
+                  value: "{{workflow.parameters.shards}}"
+                - name: team
+                  value: "{{workflow.parameters.team}}"
+                - name: environment
+                  value: "{{workflow.parameters.environment}}"
+                - name: enterprise
+                  value: "{{workflow.parameters.enterprise}}"
+                - name: browser
+                  value: "{{workflow.parameters.browser}}"
+                - name: tags
+                  value: "{{workflow.parameters.tags}}"
+                - name: workers
+                  value: "{{workflow.parameters.workers}}"
+                - name: retries
+                  value: "{{workflow.parameters.retries}}"
+                - name: timeout
+                  value: "{{workflow.parameters.timeout}}"
+              artifacts:
+                - name: features-gen
+                  from: "{{tasks.bddgen.outputs.artifacts.features-gen}}"
+
+          # Step 4: Merge Reports (combine all shard blob reports)
+          - name: merge-reports
+            templateRef:
+              name: playwright-bdd-tests
+              template: merge-reports
+            dependencies: [test-shards]
+            arguments:
+              parameters:
+                - name: image
+                  value: "{{workflow.parameters.image}}"
+                - name: total-shards
+                  value: "{{workflow.parameters.shards}}"
+              artifacts:
+                - name: blob-reports
+                  from: "{{tasks.test-shards.outputs.artifacts.blob-report}}"
+
+          # Step 5: Rerun Failures (conditional — only if failures exist)
+          - name: rerun-failures
+            templateRef:
+              name: playwright-bdd-tests
+              template: rerun-failures
+            dependencies: [merge-reports]
+            arguments:
+              parameters:
+                - name: image
+                  value: "{{workflow.parameters.image}}"
+                - name: environment
+                  value: "{{workflow.parameters.environment}}"
+                - name: enterprise
+                  value: "{{workflow.parameters.enterprise}}"
+                - name: team
+                  value: "{{workflow.parameters.team}}"
+                - name: browser
+                  value: "{{workflow.parameters.browser}}"
+              artifacts:
+                - name: rerun-file
+                  from: "{{tasks.merge-reports.outputs.artifacts.rerun-file}}"
+                - name: features-gen
+                  from: "{{tasks.bddgen.outputs.artifacts.features-gen}}"
+
+    # ─── Exit Handler: Always Notify ─────────────────────────
+    - name: exit-handler
+      templateRef:
+        name: playwright-bdd-tests
+        template: notify
+      arguments:
+        parameters:
+          - name: image
+            value: "{{workflow.parameters.image}}"
+          - name: workflow-status
+            value: "{{workflow.status}}"
+          - name: workflow-name
+            value: "{{workflow.name}}"

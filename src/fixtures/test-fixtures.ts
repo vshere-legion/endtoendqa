@@ -242,12 +242,12 @@ export const test = base.extend<CustomFixtures>({
     await use(testContext.getPageManager(page));
   },
 
-  loginPage: async ({ page, testContext }, use) => {
-    await use(new LoginPage(page, testContext as any));
+  loginPage: async ({ page }, use) => {
+    await use(new LoginPage(page));
   },
 
-  dashboardPage: async ({ page, testContext }, use) => {
-    await use(new DashboardPage(page, testContext as any));
+  dashboardPage: async ({ page }, use) => {
+    await use(new DashboardPage(page));
   },
 });
 

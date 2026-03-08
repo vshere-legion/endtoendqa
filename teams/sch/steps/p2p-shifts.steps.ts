@@ -216,8 +216,8 @@ Then('the system should prevent the assignment', async ({ page }) => {
   const violations = page.locator('.violation-message, .error-message, [class*="violation"], [class*="error"]')
     .or(page.locator('text=/violation|cannot|prevented|exceeded|overlap/i'));
   const hasViolation = await violations.isVisible({ timeout: 5000 }).catch(() => false);
-  // Assignment was either prevented (violation shown) or no new assignment made
-  expect(hasViolation || true).toBeTruthy();
+  // Violation should be shown when assignment is prevented
+  expect(hasViolation).toBeTruthy();
 });
 
 Then('an error message should indicate maximum shifts reached', async ({ page }) => {

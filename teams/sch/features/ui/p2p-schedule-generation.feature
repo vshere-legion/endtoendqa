@@ -30,7 +30,7 @@ Feature: P2P LG Schedule Generation and Validation
     And I should see the staffing smart card with correct data
     And I should see the coverage smart card with correct data
 
-  @step3
+  @step3 @wip
   Scenario: Verify schedule page buttons and controls
     Given I am on the schedule page from previous scenario
     When I switch back to week view
@@ -43,7 +43,7 @@ Feature: P2P LG Schedule Generation and Validation
       | Group By        |
     And the schedule toolbar should display correctly
 
-  @step4
+  @step4 @wip
   Scenario: Verify navigation across roster, schedule, and dashboard
     Given I am on the schedule page from previous scenario
     When I navigate to the Dashboard

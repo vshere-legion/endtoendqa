@@ -31,6 +31,12 @@ export interface EnvironmentConfig {
   /** Base URL for the application under test */
   baseUrl: string;
 
+  /** API base URL */
+  apiBaseUrl: string;
+
+  /** Auth token endpoint — used by TokenManager for API authentication (Phase 2) */
+  authTokenEndpoint: string;
+
   /** Whether running against a local environment */
   isLocal: boolean;
 
@@ -42,6 +48,15 @@ export interface EnvironmentConfig {
 
   /** Whether headless browser mode is on */
   headless: boolean;
+
+  /** Database host — used by DbHelper for direct DB validation (optional) */
+  dbHost: string;
+
+  /** Database port (default: 5432) */
+  dbPort: number;
+
+  /** Database name */
+  dbName: string;
 
   /** All environment URLs */
   urls: Record<string, string>;
@@ -129,6 +144,10 @@ function resolveBaseUrl(environment: string, fileConfig: Record<string, string>)
  *   IS_LOCAL                   -> local environment flag
  *   TIMEOUT_SECONDS            -> implicit wait timeout
  *   HEADED                     -> headed mode (inverse of headless)
+ *   AUTH_TOKEN_ENDPOINT        -> API auth endpoint for TokenManager
+ *   DB_HOST                    -> database host for DbHelper (optional)
+ *   DB_PORT                    -> database port (default: 5432)
+ *   DB_NAME                    -> database name
  */
 export function getEnvironmentConfig(): EnvironmentConfig {
   const fileConfig = loadConfigFile();
@@ -142,16 +161,26 @@ export function getEnvironmentConfig(): EnvironmentConfig {
   const headless = process.env.HEADED !== 'true';
 
   const baseUrl = resolveBaseUrl(environment, fileConfig);
+  const apiBaseUrl = process.env.API_BASE_URL || fileConfig['API_BASE_URL'] || '';
+  const authTokenEndpoint = process.env.AUTH_TOKEN_ENDPOINT || fileConfig['AUTH_TOKEN_ENDPOINT'] || '';
+  const dbHost = process.env.DB_HOST || fileConfig['DB_HOST'] || '';
+  const dbPort = parseInt(process.env.DB_PORT || fileConfig['DB_PORT'] || '5432', 10);
+  const dbName = process.env.DB_NAME || fileConfig['DB_NAME'] || '';
 
   const config: EnvironmentConfig = {
     environment,
     enterprise,
     fileNumber,
     baseUrl,
+    apiBaseUrl,
+    authTokenEndpoint,
     isLocal,
     timeoutSeconds,
     pollingSeconds,
     headless,
+    dbHost,
+    dbPort,
+    dbName,
     urls: { ...DEFAULT_URLS },
   };
 

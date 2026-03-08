@@ -1,12 +1,11 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from '../base/BasePage';
-import { TestContext } from '../../fixtures/test-fixtures';
 
 export class DashboardPage extends BasePage {
   private welcomeMessage: Locator;
 
-  constructor(page: Page, context: TestContext) {
-    super(page, context);
+  constructor(page: Page) {
+    super(page, 'DashboardPage');
     this.welcomeMessage = page.locator('.welcome-message');
   }
 

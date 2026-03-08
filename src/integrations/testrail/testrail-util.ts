@@ -81,7 +81,7 @@ export class TestRailUtil {
       console.log(`[TestRail] Test run created: ID=${this.runId}`);
       console.log(`[TestRail] URL: ${this.config.url}index.php?/runs/view/${this.runId}`);
 
-      return this.runId;
+      return this.runId as string;
     } catch (error: any) {
       console.error(`[TestRail] Failed to create test run: ${error.message}`);
       throw error;

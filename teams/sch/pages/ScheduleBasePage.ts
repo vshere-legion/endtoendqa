@@ -370,26 +370,25 @@ export class BasePage {
     Logger.debug(`Closed page`);
   }
 
-/**
- * Check if element is BOTH visible AND enabled
- * This ensures element is actually actionable
- */
-async isVisibleAndEnabled(locator: Locator, timeout: number = 5000): Promise<boolean> {
-  try {
-    // Check 1: Is visible?
-    const isVisible = await locator.isVisible({ timeout });
-    if (!isVisible) {
+  /**
+   * Check if element is BOTH visible AND enabled
+   * This ensures element is actually actionable
+   */
+  async isVisibleAndEnabled(locator: Locator, timeout: number = 5000): Promise<boolean> {
+    try {
+      // Check 1: Is visible?
+      const isVisible = await locator.isVisible({ timeout });
+      if (!isVisible) {
+        return false;
+      }
+
+      // Check 2: Is enabled? (not disabled)
+      const isEnabled = await locator.isEnabled({ timeout: 1000 });
+
+      return isVisible && isEnabled;
+
+    } catch (error) {
       return false;
     }
-    
-    // Check 2: Is enabled? (not disabled)
-    const isEnabled = await locator.isEnabled({ timeout: 1000 });
-    
-    return isVisible && isEnabled;
-    
-  } catch (error) {
-    return false;
   }
-}
-
 }

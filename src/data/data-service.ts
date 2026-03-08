@@ -23,8 +23,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { UserData, Location, EmployeeData, TestDataFile, UserRole } from './models';
 import { getEnvironmentConfig, EnvironmentConfig } from '../config/environment';
+import { CredentialProvider } from '../auth/credential-provider';
 
-export class DataService {
+export class DataService implements CredentialProvider {
   private data: TestDataFile;
   private envConfig: EnvironmentConfig;
 
@@ -211,7 +212,14 @@ export class DataService {
       return this.selectedUILoginUser;
     }
 
-    const user = this.data.users.find(u => {
+    // Use TEST_WORKER_INDEX for deterministic slot allocation.
+    // Each Playwright worker is a separate process — without this, all workers
+    // load the same JSON and independently select the same user (race condition).
+    // Worker N selects from the available pool at index N % pool.length, ensuring
+    // different workers pick different users when the pool has enough entries.
+    const workerIndex = parseInt(process.env.TEST_WORKER_INDEX || '0', 10);
+
+    const available = this.data.users.filter(u => {
       if (u.isUsed) return false;
       if (!u.userType || u.userType.toLowerCase() !== userType.toLowerCase()) return false;
       if (!u.usedAs.includes('UI_LOGIN')) return false;
@@ -219,14 +227,17 @@ export class DataService {
       return true;
     });
 
-    if (!user) {
+    if (available.length === 0) {
       throw new Error(`[DataService] No available UI_LOGIN user with userType: ${userType}`);
     }
 
+    const user = available[workerIndex % available.length];
     user.isUsed = true;
     this.selectedUILoginUser = user;
 
-    console.log(`[DataService] Selected UI login user by type '${userType}': ${user.name}`);
+    console.log(
+      `[DataService] Worker ${workerIndex} selected UI login user by type '${userType}': ${user.name}`,
+    );
     return user;
   }
 
@@ -251,8 +262,10 @@ export class DataService {
       return this.selectedUILoginUser;
     }
 
-    // First: try to find a user matching both userType and group
-    let user = this.data.users.find(u => {
+    const workerIndex = parseInt(process.env.TEST_WORKER_INDEX || '0', 10);
+
+    // First: try to find users matching both userType and group
+    let available = this.data.users.filter(u => {
       if (u.isUsed) return false;
       if (!u.userType || u.userType.toLowerCase() !== userType.toLowerCase()) return false;
       if (!u.usedAs.includes('UI_LOGIN')) return false;
@@ -262,8 +275,8 @@ export class DataService {
     });
 
     // Fallback: try ungrouped users (no group field)
-    if (!user) {
-      user = this.data.users.find(u => {
+    if (available.length === 0) {
+      available = this.data.users.filter(u => {
         if (u.isUsed) return false;
         if (!u.userType || u.userType.toLowerCase() !== userType.toLowerCase()) return false;
         if (!u.usedAs.includes('UI_LOGIN')) return false;
@@ -273,17 +286,20 @@ export class DataService {
       });
     }
 
-    if (!user) {
+    if (available.length === 0) {
       throw new Error(
         `[DataService] No available UI_LOGIN user with userType: ${userType}, group: ${group}`,
       );
     }
 
+    // Worker-index deterministic slot allocation — prevents parallel workers
+    // from selecting the same credential when pool has enough entries.
+    const user = available[workerIndex % available.length];
     user.isUsed = true;
     this.selectedUILoginUser = user;
 
     console.log(
-      `[DataService] Selected UI login user by type '${userType}' + group '${group}': ${user.name}`,
+      `[DataService] Worker ${workerIndex} selected UI login user by type '${userType}' + group '${group}': ${user.name}`,
     );
     return user;
   }

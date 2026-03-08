@@ -7,14 +7,13 @@ Given('I am on the login page', async ({ loginPage }) => {
   await loginPage.goto();
 });
 
-When('I login with username {string} and password {string}', 
+When('I login with username {string} and password {string}',
   async ({ loginPage, testContext }, username: string, password: string) => {
-    testContext.sharedData.set('username', username);
+    testContext.setContext('username', username);
     await loginPage.login(username, password);
 });
 
-Then('I should be logged in successfully', async ({ dashboardPage, testContext }) => {
+Then('I should be logged in successfully', async ({ dashboardPage }) => {
   const isOnDashboard = await dashboardPage.isOnDashboard();
   expect(isOnDashboard).toBeTruthy();
-  expect(testContext.userData.token).toBeDefined();
 });

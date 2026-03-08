@@ -404,7 +404,7 @@ Feature-Level Sharded (20 workers):
 ### 1. Install Dependencies
 
 ```bash
-cd /Users/nishant/Documents/playwright-cucumber-legion-framework
+cd playwright-automation-framework
 npm install
 ```
 

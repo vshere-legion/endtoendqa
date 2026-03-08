@@ -36,11 +36,9 @@ Feature: P2P LG Schedule Generation and Validation
     When I switch back to week view
     Then the following buttons should be displayed and functional:
       | button          |
-      | Generate        |
+      | Edit            |
+      | Delete          |
       | Publish         |
-      | Copy Schedule   |
-      | Print           |
-      | Add New Shift   |
       | Filter          |
       | Group By        |
     And the schedule toolbar should display correctly

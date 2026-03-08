@@ -686,8 +686,8 @@ Workers | Admin users needed | StoreManager users needed
 10      | 10                 | 10
 15      | 15                 | 15
 
-OR: Use storageState session reuse (all workers share one pre-authenticated session)
-    → Then you only need 1 user per type
+OR: Use feature-level session sharing (@mode:serial, idempotent login in Background)
+    → Reduces login overhead per scenario within a feature
 ```
 
 ### Step 5: Write Feature Steps

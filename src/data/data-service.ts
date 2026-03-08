@@ -334,6 +334,63 @@ export class DataService implements CredentialProvider {
   }
 
   /**
+   * Get API login user by userType scoped to a specific group.
+   *
+   * Mirrors getUILoginUserByTypeAndGroup() but filters by API_LOGIN instead of UI_LOGIN.
+   * Falls back to ungrouped users if no grouped match is found.
+   *
+   * Usage (from @ApiLogin hook or "via api" step):
+   *   @group-P2PLGTest
+   *   Feature: P2P Schedule
+   *     Given I login as "InternalAdmin" via api
+   *     -> dataService.getAPILoginUserByTypeAndGroup("InternalAdmin", "P2PLGTest")
+   */
+  getAPILoginUserByTypeAndGroup(userType: string, group: string): UserData {
+    if (this.selectedAPILoginUser) {
+      return this.selectedAPILoginUser;
+    }
+
+    const workerIndex = parseInt(process.env.TEST_WORKER_INDEX || '0', 10);
+
+    // First: try grouped users matching both userType and group
+    let available = this.data.users.filter(u => {
+      if (u.isUsed) return false;
+      if (!u.userType || u.userType.toLowerCase() !== userType.toLowerCase()) return false;
+      if (!u.usedAs.includes('API_LOGIN')) return false;
+      if (u.group !== group) return false;
+      if (this.envConfig.isLocal && !u.isLocal) return false;
+      return true;
+    });
+
+    // Fallback: try ungrouped users (no group field)
+    if (available.length === 0) {
+      available = this.data.users.filter(u => {
+        if (u.isUsed) return false;
+        if (!u.userType || u.userType.toLowerCase() !== userType.toLowerCase()) return false;
+        if (!u.usedAs.includes('API_LOGIN')) return false;
+        if (u.group) return false; // skip grouped users
+        if (this.envConfig.isLocal && !u.isLocal) return false;
+        return true;
+      });
+    }
+
+    if (available.length === 0) {
+      throw new Error(
+        `[DataService] No available API_LOGIN user with userType: ${userType}, group: ${group}`,
+      );
+    }
+
+    const user = available[workerIndex % available.length];
+    user.isUsed = true;
+    this.selectedAPILoginUser = user;
+
+    console.log(
+      `[DataService] Worker ${workerIndex} selected API login user by type '${userType}' + group '${group}': ${user.name}`,
+    );
+    return user;
+  }
+
+  /**
    * Get any available user by role
    */
   getUserByRole(role: UserRole): UserData {

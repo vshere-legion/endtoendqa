@@ -1,5 +1,5 @@
 # ─── Stage 1: Install dependencies ────────────────────────
-FROM mcr.microsoft.com/playwright:v1.40.0-jammy AS deps
+FROM mcr.microsoft.com/playwright:v1.50.0-jammy AS deps
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci --ignore-scripts
 
 # ─── Stage 2: Test runner ─────────────────────────────────
-FROM mcr.microsoft.com/playwright:v1.40.0-jammy AS runner
+FROM mcr.microsoft.com/playwright:v1.50.0-jammy AS runner
 
 WORKDIR /app
 

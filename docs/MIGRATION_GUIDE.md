@@ -238,6 +238,35 @@ export class SchedulePage {
 | `By.linkText("Click me")` | `page.getByRole('link', { name: 'Click me' })` |
 | `findElements(By.css(".item"))` | `page.locator('.item').all()` |
 
+### Using Shared UI Components
+
+For common UI patterns (navigation, location selection), the framework provides **shared composable components** in `shared/pages/components/`. These are NOT page objects — they're lightweight helpers that receive a `Page` instance.
+
+```typescript
+import { NavigationComponent, LocationSelectorComponent } from '@shared/pages/components';
+
+// Create component instances (no BasePage inheritance needed)
+const nav = new NavigationComponent(page);
+const locationSelector = new LocationSelectorComponent(page);
+
+// Use in page objects or step definitions
+await nav.clickScheduleTab();
+await locationSelector.searchAndSelectLocation('Automation1');
+```
+
+**When to use shared components vs team page objects:**
+
+| Use shared components when... | Use team page objects when... |
+|---|---|
+| Building a **new** team's page objects | Existing team pages already work reliably |
+| The interaction is standard (nav, location) | The interaction has team-specific timing needs |
+| Default mode (fresh context per scenario) | `@mode:serial` with cascading scenario chains |
+
+> **Migration caution:** SCH team page objects have NOT been migrated to shared components.
+> SCH's `ScheduleBasePage` uses explicit `waitForElementVisible(30s)` before every action,
+> which behaves differently from shared components' Playwright auto-wait in serial mode chains.
+> Validate thoroughly before migrating existing team pages.
+
 ---
 
 ## 5. Porting Test Configuration

@@ -15,7 +15,7 @@ assignees: ''
 - **OS:** <!-- macOS 14, Ubuntu 22.04, Docker, etc. -->
 - **Browser:** <!-- chromium, firefox, webkit -->
 - **TEST_ENV:** <!-- dev, staging, rc, uat -->
-- **Team:** <!-- TNP, SCH, PLT-Core, etc. -->
+- **Team:** <!-- TA, SCH, PLT-Core, etc. -->
 
 ## Steps to Reproduce
 1.

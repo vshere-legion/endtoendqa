@@ -718,7 +718,7 @@ test:
 pipeline {
     agent any
     parameters {
-        choice(name: 'TEAM', choices: ['all', 'TNP', 'SCH', ...], description: 'Team')
+        choice(name: 'TEAM', choices: ['all', 'TA', 'SCH', ...], description: 'Team')
         choice(name: 'ENVIRONMENT', choices: ['staging', 'uat', 'prod'], description: 'Env')
         choice(name: 'BROWSER', choices: ['chromium', 'firefox', 'webkit'], description: 'Browser')
         string(name: 'TAGS', defaultValue: '', description: 'Tag expression')

@@ -27,7 +27,7 @@
 ## 1. Project Root
 
 ```
-playwright-cucumber-legion-framework-v2/
+playwright-automation-framework/
 │
 ├── playwright.config.ts        ← 1. ENTRY POINT — Playwright reads this first
 ├── package.json                ← 2. Dependencies, npm scripts
@@ -136,7 +136,7 @@ loadEnvConfig('staging')
 **framework.config.ts** — Static framework configuration:
 ```typescript
 export const frameworkConfig = {
-  teams: ['TNP', 'SCH', 'PLT-Core', 'PLT-Int', 'PLT-Ops', 'LRB', 'EV-Com', 'EV-LIP', 'EV-ELM', 'GENAI', 'EPR'],
+  teams: ['TA', 'SCH', 'PLT-Core', 'PLT-Int', 'PLT-Ops', 'LRB', 'EV-Com', 'EV-LIP', 'EV-ELM', 'GENAI', 'EPR'],
   tags: {
     priority: ['@P1-Critical', '@P2-High', '@P3-Medium', '@P4-Low'],
     suite: ['@Regression', '@Smoke', '@NewFeature'],
@@ -296,7 +296,7 @@ test.Given('I login as {string}.', async ({ testContext, loginPage, logger }, us
 
 ```
 Feature start (first scenario triggers creation):
-  1. context       → new BrowserContext with storageState (pre-auth cookies)
+  1. context       → new BrowserContext (clean slate, login handled by Background step)
   2. page          → new Page (browser tab)
   3. testContext    → new TestContext() → populates ENTERPRISE_NAME
 
@@ -350,9 +350,24 @@ BasePage (src/pages/base/BasePage.ts)
   ├── LoginPage (src/pages/auth/LoginPage.ts)
   ├── DashboardPage (src/pages/dashboard/DashboardPage.ts)
   ├── SchedulePage (teams/SCH/pages/SchedulePage.ts)
-  ├── TimesheetPage (teams/TNP/pages/TimesheetPage.ts)
+  ├── TimesheetPage (teams/ta/pages/TimesheetPage.ts)
   └── ... (team-specific pages)
+
+Shared UI Components (composable — NOT in the BasePage hierarchy)
+  │
+  shared/pages/components/
+  ├── NavigationComponent.ts        ← Sidebar nav items + sub-tabs
+  ├── LocationSelectorComponent.ts  ← Location search/chooser/district
+  └── index.ts                      ← Barrel export
+
+  shared/pages/
+  └── DashboardPage.ts              ← Composes NavigationComponent + LocationSelectorComponent
 ```
+
+> **Note:** Shared components are composable helpers that receive a `Page` instance.
+> They do NOT extend BasePage. Team page objects (e.g., SCH's `P2PSchedulePage`)
+> have NOT been migrated to use these yet — they retain their own inline locators
+> and `ScheduleBasePage` utilities for timing compatibility in serial mode chains.
 
 ### How Page Objects Are Structured
 
@@ -501,7 +516,7 @@ Given('I login as {string}.', async ({ testContext, loginPage, logger }, userTyp
 
 ```
 teams/
-├── TNP/                         ← Time & Attendance / Timesheet
+├── ta/                          ← Time & Attendance / Timesheet
 │   ├── features/
 │   │   ├── ui/                  ← UI test features
 │   │   │   ├── timesheet.feature
@@ -772,7 +787,7 @@ teams/*/pages/*.ts
 2. playwright.config.ts → loads config → calls bddgen
 3. bddgen → reads .feature files → generates .features-gen/*.spec.ts
 4. Playwright runner → reads .spec.ts → finds test functions
-5. global-setup.ts → health check → pre-authenticate roles
+5. global-setup.ts → health check → validate environment
 6. Playwright spawns N workers
 7. Each worker runs scenarios:
    a. Fixture setup (testContext, logger, apiHelper, pages)

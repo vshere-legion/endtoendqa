@@ -1,23 +1,69 @@
 {
-  "story_id": "ER-2600",
+  "story_id": "ER-3160",
   "impact_keywords": [
-    "group",
-    "shift",
-    "transition",
-    "district",
+    "manager",
+    "schedule",
     "employee",
-    "location"
+    "scheduling",
+    "generation",
+    "spread",
+    "budget",
+    "demand",
+    "role",
+    "create",
+    "prioritize",
+    "week",
+    "assign",
+    "shift",
+    "open",
+    "optimize",
+    "time"
   ],
   "impacted_automated": [
+    {
+      "feature_file": "teams/sch/features/ui/schedule-shift-flow.feature",
+      "feature_name": "Schedule Shift Creation and Validation Flow",
+      "team": "sch",
+      "scenario_count": 5,
+      "impact_score": 9,
+      "reasons": [
+        "Domain tag: @schedule",
+        "Keyword overlap: employee, assign, role, shift, time",
+        "Scenario: Login and create schedule for next week"
+      ]
+    },
     {
       "feature_file": "teams/sch/features/ui/p2p-drag-drop-employees.feature",
       "feature_name": "P2P LG Drag and Drop Employee Operations",
       "team": "sch",
       "scenario_count": 2,
+      "impact_score": 7,
+      "reasons": [
+        "Keyword overlap: schedule, employee, scheduling, create, shift",
+        "Scenario: Drag and drop employee to same location"
+      ]
+    },
+    {
+      "feature_file": "teams/sch/features/ui/schedule-creation-two-weeks.feature",
+      "feature_name": "Schedule Creation for Future Week",
+      "team": "sch",
+      "scenario_count": 3,
+      "impact_score": 7,
+      "reasons": [
+        "Domain tag: @schedule",
+        "Keyword overlap: schedule, create, week",
+        "Scenario: Navigate to the schedule page for the target week 2 weeks ah"
+      ]
+    },
+    {
+      "feature_file": "teams/sch/features/ui/p2p-drag-drop-shifts.feature",
+      "feature_name": "P2P LG Drag and Drop Shift Operations",
+      "team": "sch",
+      "scenario_count": 7,
       "impact_score": 6,
       "reasons": [
-        "Keyword overlap: group, shift, location, employee",
-        "Scenario: Drag and drop employee to same location"
+        "Keyword overlap: time, open, role, shift",
+        "Scenario: Bulk drag and drop shifts to same day and same location crea"
       ]
     },
     {
@@ -27,19 +73,19 @@
       "scenario_count": 4,
       "impact_score": 6,
       "reasons": [
-        "Keyword overlap: group, shift, location, employee",
+        "Keyword overlap: open, employee, role, shift",
         "Scenario: Employee receives and accepts shift offers"
       ]
     },
     {
-      "feature_file": "teams/sch/features/ui/schedule-shift-flow.feature",
-      "feature_name": "Schedule Shift Creation and Validation Flow",
+      "feature_file": "teams/sch/features/ui/p2p-shift-assignment.feature",
+      "feature_name": "P2P LG Shift Assignment with Constraints",
       "team": "sch",
-      "scenario_count": 5,
+      "scenario_count": 4,
       "impact_score": 6,
       "reasons": [
-        "Keyword overlap: group, shift, location, employee",
-        "Scenario: Login and create schedule for next week"
+        "Keyword overlap: time, shift, role, assign",
+        "Scenario: Assign TM to shift"
       ]
     },
     {
@@ -49,19 +95,8 @@
       "scenario_count": 2,
       "impact_score": 5,
       "reasons": [
-        "Keyword overlap: group, shift, employee",
+        "Keyword overlap: shift, employee, generation",
         "Scenario: Verify Shift file import schema and CSV template generation"
-      ]
-    },
-    {
-      "feature_file": "teams/PLT-Int/features/api/platform-extract-validation.feature",
-      "feature_name": "Platform Extract Validation",
-      "team": "PLT-Int",
-      "scenario_count": 4,
-      "impact_score": 5,
-      "reasons": [
-        "Keyword overlap: group, location, employee",
-        "Scenario: Verify LocationEntity extract records match Locations V2 API"
       ]
     },
     {
@@ -71,19 +106,8 @@
       "scenario_count": 2,
       "impact_score": 5,
       "reasons": [
-        "Keyword overlap: group, shift, employee",
+        "Keyword overlap: shift, employee, generation",
         "Scenario: Verify Shift file import schema and CSV template generation"
-      ]
-    },
-    {
-      "feature_file": "teams/sch/features/ui/p2p-copy-schedule.feature",
-      "feature_name": "P2P LG Copy Schedule and Multi-User Operations",
-      "team": "sch",
-      "scenario_count": 2,
-      "impact_score": 5,
-      "reasons": [
-        "Keyword overlap: group, shift, location",
-        "Scenario: Copy schedule to next week"
       ]
     },
     {
@@ -93,30 +117,30 @@
       "scenario_count": 6,
       "impact_score": 5,
       "reasons": [
-        "Keyword overlap: group, shift, location",
+        "Keyword overlap: manager, open, shift",
         "Scenario: Verify status of P2P in DM views"
       ]
     },
     {
-      "feature_file": "teams/sch/features/ui/p2p-drag-drop-shifts.feature",
-      "feature_name": "P2P LG Drag and Drop Shift Operations",
+      "feature_file": "teams/sch/features/ui/p2p-master-template.feature",
+      "feature_name": "P2P LG Master Template Integration",
       "team": "sch",
       "scenario_count": 7,
       "impact_score": 5,
       "reasons": [
-        "Keyword overlap: group, shift, location",
-        "Scenario: Bulk drag and drop shifts to same day and same location crea"
+        "Keyword overlap: open, time, shift",
+        "Scenario: New added shifts show in master template and schedule"
       ]
     },
     {
-      "feature_file": "teams/sch/features/ui/p2p-shift-assignment.feature",
-      "feature_name": "P2P LG Shift Assignment with Constraints",
+      "feature_file": "teams/sch/features/ui/p2p-permissions.feature",
+      "feature_name": "P2P LG Permission-Based Access Control",
       "team": "sch",
-      "scenario_count": 4,
+      "scenario_count": 3,
       "impact_score": 5,
       "reasons": [
-        "Keyword overlap: group, shift, location",
-        "Scenario: Assign TM to shift"
+        "Keyword overlap: manager, budget, create",
+        "Scenario: Parent location disables budget edit button"
       ]
     },
     {
@@ -126,7 +150,7 @@
       "scenario_count": 6,
       "impact_score": 5,
       "reasons": [
-        "Keyword overlap: group, shift, location",
+        "Keyword overlap: open, time, assign",
         "Scenario: Verify content on multi-edit shifts window"
       ]
     },
@@ -137,18 +161,18 @@
       "scenario_count": 3,
       "impact_score": 4,
       "reasons": [
-        "Keyword overlap: group, location",
+        "Keyword overlap: schedule, week",
         "Scenario: Navigate to schedule and delete if already generated"
       ]
     },
     {
-      "feature_file": "teams/platform/features/api/location-entity-validation.feature",
-      "feature_name": "LocationEntity Extract Validation Against Locations V2 API",
-      "team": "platform",
-      "scenario_count": 1,
+      "feature_file": "teams/PLT-Int/features/api/platform-extract-validation.feature",
+      "feature_name": "Platform Extract Validation",
+      "team": "PLT-Int",
+      "scenario_count": 4,
       "impact_score": 4,
       "reasons": [
-        "Keyword overlap: group, location",
+        "Keyword overlap: employee, role",
         "Scenario: Verify LocationEntity extract records match Locations V2 API"
       ]
     },
@@ -159,19 +183,8 @@
       "scenario_count": 6,
       "impact_score": 4,
       "reasons": [
-        "Keyword overlap: group, location",
+        "Keyword overlap: budget, create",
         "Scenario: Daily budget values display correctly on all pages for child"
-      ]
-    },
-    {
-      "feature_file": "teams/sch/features/ui/p2p-master-template.feature",
-      "feature_name": "P2P LG Master Template Integration",
-      "team": "sch",
-      "scenario_count": 7,
-      "impact_score": 4,
-      "reasons": [
-        "Keyword overlap: group, shift",
-        "Scenario: New added shifts show in master template and schedule"
       ]
     },
     {
@@ -181,7 +194,7 @@
       "scenario_count": 3,
       "impact_score": 4,
       "reasons": [
-        "Keyword overlap: shift, location",
+        "Keyword overlap: create, assign",
         "Scenario: Assign TMs workflow via new create shift UI"
       ]
     },
@@ -192,19 +205,8 @@
       "scenario_count": 4,
       "impact_score": 4,
       "reasons": [
-        "Keyword overlap: shift, location",
+        "Keyword overlap: open, create",
         "Scenario: Auto open shift in week view"
-      ]
-    },
-    {
-      "feature_file": "teams/sch/features/ui/p2p-peer-locations.feature",
-      "feature_name": "P2P LG Peer Location Operations",
-      "team": "sch",
-      "scenario_count": 4,
-      "impact_score": 4,
-      "reasons": [
-        "Keyword overlap: group, location",
-        "Scenario: Verify peer locations in Schedule Overview page"
       ]
     },
     {
@@ -214,7 +216,7 @@
       "scenario_count": 3,
       "impact_score": 4,
       "reasons": [
-        "Keyword overlap: group, location",
+        "Keyword overlap: open, role",
         "Scenario: Apply and verify filters on schedule page"
       ]
     },
@@ -225,40 +227,29 @@
       "scenario_count": 4,
       "impact_score": 4,
       "reasons": [
-        "Keyword overlap: group, location",
+        "Keyword overlap: time, generation",
         "Scenario: Generate P2P LG schedule with time range"
       ]
     },
     {
-      "feature_file": "teams/sch/features/ui/schedule-creation-two-weeks.feature",
-      "feature_name": "Schedule Creation for Future Week",
-      "team": "sch",
-      "scenario_count": 3,
-      "impact_score": 4,
-      "reasons": [
-        "Keyword overlap: group, location",
-        "Scenario: Navigate to the schedule page for the target week 2 weeks ah"
-      ]
-    },
-    {
-      "feature_file": "teams/platform/features/api/employee-entity-validation.feature",
-      "feature_name": "EmployeeEntity Extract Validation Against Employee V2 API",
-      "team": "platform",
-      "scenario_count": 1,
-      "impact_score": 3,
-      "reasons": [
-        "Keyword overlap: group, location, employee"
-      ]
-    },
-    {
-      "feature_file": "teams/sch/features/ui/p2p-permissions.feature",
-      "feature_name": "P2P LG Permission-Based Access Control",
+      "feature_file": "teams/sch/features/ui/forecast-labor-hours-filter.feature",
+      "feature_name": "Forecast Labor Hours - Work Role Filter Verification",
       "team": "sch",
       "scenario_count": 3,
       "impact_score": 3,
       "reasons": [
-        "Keyword overlap: location",
-        "Scenario: Parent location disables budget edit button"
+        "Keyword overlap: schedule, open, role"
+      ]
+    },
+    {
+      "feature_file": "teams/sch/features/ui/p2p-copy-schedule.feature",
+      "feature_name": "P2P LG Copy Schedule and Multi-User Operations",
+      "team": "sch",
+      "scenario_count": 2,
+      "impact_score": 3,
+      "reasons": [
+        "Keyword overlap: shift",
+        "Scenario: Copy schedule to next week"
       ]
     },
     {
@@ -268,22 +259,32 @@
       "scenario_count": 2,
       "impact_score": 3,
       "reasons": [
-        "Keyword overlap: group, location, employee"
+        "Keyword overlap: manager, employee, time"
+      ]
+    },
+    {
+      "feature_file": "teams/ta/features/ui/ta-toggle TA-19306.feature",
+      "feature_name": "Time Off Configuration - Balance Deduction Toggle",
+      "team": "ta",
+      "scenario_count": 1,
+      "impact_score": 3,
+      "reasons": [
+        "Keyword overlap: manager, time, role"
       ]
     }
   ],
   "impacted_manual": [],
-  "not_impacted_count": 11,
+  "not_impacted_count": 13,
   "coverage_gaps": [
     "No existing automated test for cross-location transition flow"
   ],
   "summary": {
-    "total_regression_suite": 36,
-    "impacted_automated_features": 24,
-    "impacted_automated_scenarios": 88,
+    "total_regression_suite": 37,
+    "impacted_automated_features": 23,
+    "impacted_automated_scenarios": 86,
     "impacted_manual_features": 0,
-    "not_impacted": 11,
+    "not_impacted": 13,
     "coverage_gaps": 1
   },
-  "recommendation": "Run 24 automated feature(s) (88 scenarios) + flag 0 manual feature(s) for coverage"
+  "recommendation": "Run 23 automated feature(s) (86 scenarios) + flag 0 manual feature(s) for coverage"
 }

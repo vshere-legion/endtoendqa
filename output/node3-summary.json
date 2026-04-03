@@ -3,11 +3,11 @@
   "total_scenarios": 10,
   "results": [
     {
-      "feature_file": "er_2600.feature",
+      "feature_file": "er_3160.feature",
       "team": "SCH",
       "scenarios": 10,
-      "steps_file": "/Users/vshere/Documents/Projects/QAEndToEnd/output/SCH/steps/er_2600.steps.ts",
-      "page_file": "/Users/vshere/Documents/Projects/QAEndToEnd/output/SCH/pages/Er2600Page.ts",
+      "steps_file": "/Users/vshere/Documents/Projects/QAEndToEnd/output/SCH/steps/er_3160.steps.ts",
+      "page_file": "/Users/vshere/Documents/Projects/QAEndToEnd/output/SCH/pages/Er3160Page.ts",
       "locator_stats": {
         "getByRole": 19,
         "getByText": 1,

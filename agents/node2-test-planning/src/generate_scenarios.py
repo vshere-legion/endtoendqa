@@ -157,7 +157,7 @@ Feature: {feature_name}
 
     def _background(self) -> str:
         return """  Background:
-    Given I am logged in as "SchedulingManager"
+    Given I am logged in as "StoreManager"
     And there are multiple locations configured in the same district
     And employees exist with multi-skill qualifications across locations"""
 

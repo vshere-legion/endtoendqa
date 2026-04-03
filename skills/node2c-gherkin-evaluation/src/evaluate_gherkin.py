@@ -501,16 +501,19 @@ def main():
     print(f"Critical: {result['total_critical']} | Warnings: {result['total_warnings']}")
     print(f"Gate Status: {result['status']}")
 
-    # Copy approved files
+    # Copy approved files (skip if src and dst are the same)
     if result["approved_files"] > 0:
         os.makedirs(args.approved_output, exist_ok=True)
         for fr in result["file_results"]:
             if fr["status"] == "APPROVED":
-                src = fr["path"]
-                dst = os.path.join(args.approved_output, fr["file"])
+                src = os.path.abspath(fr["path"])
+                dst = os.path.abspath(os.path.join(args.approved_output, fr["file"]))
+                if src == dst:
+                    continue  # Already in the right place
                 with open(src, "r") as sf:
-                    with open(dst, "w") as df:
-                        df.write(sf.read())
+                    content = sf.read()
+                with open(dst, "w") as df:
+                    df.write(content)
 
     # Write output
     os.makedirs(os.path.dirname(args.output), exist_ok=True)

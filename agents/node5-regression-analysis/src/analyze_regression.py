@@ -108,10 +108,24 @@ def analyze_impact(
 
     # Build impact keywords from the story
     impact_keywords = set()
+    stop_words = {
+        "that", "this", "with", "from", "into", "have", "been", "would",
+        "should", "could", "they", "their", "there", "what", "when", "where",
+        "which", "will", "also", "more", "most", "much", "make", "like",
+        "some", "such", "than", "then", "them", "these", "those", "very",
+        "does", "doing", "done", "each", "every", "about", "after", "before",
+        "being", "between", "both", "same", "other", "only", "over", "under",
+        "want", "wants", "able", "across", "describe", "verify", "ensure",
+    }
 
     # From title
     for word in re.findall(r'\b[a-z]{4,}\b', title):
-        if word not in ("that", "this", "with", "from", "into", "have", "been", "would", "should", "could"):
+        if word not in stop_words:
+            impact_keywords.add(word)
+
+    # From description (scan for domain-relevant terms)
+    for word in re.findall(r'\b[a-z]{4,}\b', description):
+        if word not in stop_words:
             impact_keywords.add(word)
 
     # From components
@@ -119,11 +133,22 @@ def analyze_impact(
         for word in re.findall(r'\b[a-z]{3,}\b', comp.lower()):
             impact_keywords.add(word)
 
-    # Domain-specific keywords
+    # From labels
+    for label in labels:
+        for word in re.findall(r'\b[a-z]{3,}\b', label.lower()):
+            impact_keywords.add(word)
+
+    # Domain-specific keywords — broader set
     domain_keywords = {
         "schedule", "shift", "location", "transition", "employee",
         "group", "district", "peer", "assign", "role", "optimizer",
         "auto-schedule", "p2p", "generation", "demand", "labor",
+        "scheduling", "forecast", "budget", "compliance", "overtime",
+        "template", "publish", "open", "swap", "offer", "time",
+        "break", "meal", "permission", "filter", "drag", "drop",
+        "copy", "edit", "create", "delete", "week", "view",
+        "manager", "worker", "qualification", "skill", "prioritize",
+        "optimize", "spread", "full-time", "fulltime", "part-time",
     }
     story_domain = impact_keywords & domain_keywords
 

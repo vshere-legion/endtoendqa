@@ -1,0 +1,22 @@
+{
+  "files_processed": 1,
+  "total_scenarios": 10,
+  "results": [
+    {
+      "feature_file": "er_2600.feature",
+      "team": "SCH",
+      "scenarios": 10,
+      "steps_file": "/Users/vshere/Documents/Projects/QAEndToEnd/output/SCH/steps/er_2600.steps.ts",
+      "page_file": "/Users/vshere/Documents/Projects/QAEndToEnd/output/SCH/pages/Er2600Page.ts",
+      "locator_stats": {
+        "getByRole": 19,
+        "getByText": 1,
+        "getByLabel": 1,
+        "getByTestId": 9,
+        "css_selector": 0,
+        "xpath": 0,
+        "hardcoded_id": 0
+      }
+    }
+  ]
+}

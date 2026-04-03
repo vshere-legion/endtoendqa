@@ -1,0 +1,34 @@
+{
+  "enterpriseId": "forac",
+  "token": "",
+  "users": [
+    {
+      "name": "gunjan+demandsm@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "userType": "DemandSM",
+      "isLocal": false,
+      "isUsed": false,
+      "locations": ["NikeDemand"],
+      "group": "FoRacDemandTest"
+    },
+    {
+      "name": "vthorat+debie12@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "userType": "InternalAdmin",
+      "isLocal": false,
+      "isUsed": false,
+      "locations": ["NikeDemand"],
+      "group": "FoRacScheduleExtractTest"
+    }
+  ],
+  "locations": [
+    {
+      "name": "NikeDemand",
+      "isLocal": false,
+      "isUsed": false
+    }
+  ],
+  "employees": []
+}

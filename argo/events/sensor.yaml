@@ -1,0 +1,114 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: qaendtoend-vikas-sensor
+  namespace: argo-events
+spec:
+  eventBusName: default
+
+  dependencies:
+    # Dependency 1: Claude Project command via webhook
+    - name: claude-trigger
+      eventSourceName: qaendtoend-vikas-event-source
+      eventName: claude-command
+      filters:
+        data:
+          - path: body.story_id
+            type: string
+            comparator: "!="
+            value: '""'
+
+    # Dependency 2: Slack command via webhook
+    - name: slack-trigger
+      eventSourceName: qaendtoend-vikas-event-source
+      eventName: slack-command
+      filters:
+        data:
+          - path: body.story_id
+            type: string
+            comparator: "!="
+            value: '""'
+
+  triggers:
+    # Trigger 1: On Claude command — submit QA workflow
+    - template:
+        name: claude-qa-workflow-trigger
+        conditions: claude-trigger
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: qaendtoend-vikas-claude-
+                namespace: argo
+              spec:
+                workflowTemplateRef:
+                  name: qaendtoend-vikas
+                arguments:
+                  parameters:
+                    - name: story-id
+                      value: ""
+                    - name: trigger-source
+                      value: "claude-project"
+                    - name: requested-by
+                      value: ""
+          parameters:
+            - src:
+                dependencyName: claude-trigger
+                dataKey: body.story_id
+              dest: spec.arguments.parameters.0.value
+            - src:
+                dependencyName: claude-trigger
+                dataKey: body.requested_by
+              dest: spec.arguments.parameters.2.value
+
+    # Trigger 2: On Slack command — submit QA workflow
+    - template:
+        name: slack-qa-workflow-trigger
+        conditions: slack-trigger
+        argoWorkflow:
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: qaendtoend-vikas-slack-
+                namespace: argo
+              spec:
+                workflowTemplateRef:
+                  name: qaendtoend-vikas
+                arguments:
+                  parameters:
+                    - name: story-id
+                      value: ""
+                    - name: trigger-source
+                      value: "slack"
+                    - name: requested-by
+                      value: ""
+          parameters:
+            - src:
+                dependencyName: slack-trigger
+                dataKey: body.story_id
+              dest: spec.arguments.parameters.0.value
+            - src:
+                dependencyName: slack-trigger
+                dataKey: body.requested_by
+              dest: spec.arguments.parameters.2.value
+
+    # Notification: Slack confirmation that job was accepted
+    - template:
+        name: slack-acceptance-notification
+        conditions: claude-trigger || slack-trigger
+        slack:
+          slackToken:
+            name: slack-token-secret
+            key: token
+          channel: "#qa-end-to-end-vikas"
+          message: |
+            :white_check_mark: *Layer 1 — Job Accepted | qaendtoend-vikas*
+            *Story ID:* received
+            *Argo Dashboard:* https://argo.ops.dev.legion.work/workflows/argo
+            Layer 1 task of accepting the job is done — now proceeding to *Layer 2 Node 1 (Review Jira US / PRD)*.

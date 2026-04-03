@@ -1,0 +1,44 @@
+{
+  "enterpriseId": "",
+  "token": "",
+  "users": [
+    {
+      "name": "Coty.C",
+      "password": "Coty.C",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "InternalAdmin",
+      "isLocal": false,
+      "locations": ["Automation28"],
+      "group": "P2PLGTest"
+    },
+    {
+      "name": "Coty.C",
+      "password": "Coty.C",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "DemandSM",
+      "isLocal": false,
+      "locations": ["Automation28"],
+      "group": "FoRacDemandTest"
+    },
+    {
+      "name": "Coty.C",
+      "password": "Coty.C",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "Admin",
+      "isLocal": false,
+      "locations": ["Automation28"]
+    }
+  ],
+  "locations": [
+    {
+      "name": "Automation28",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": ""
+    }
+  ],
+  "employees": []
+}

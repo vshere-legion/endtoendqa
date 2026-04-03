@@ -1,0 +1,85 @@
+{
+  "enterpriseId": "",
+  "token": "",
+  "users": [
+    {
+      "name": "userAdminTA",
+      "password": "legion2020",
+      "usedAs": ["API_LOGIN_GENERAL"],
+      "isUsed": false,
+      "userType": "Admin",
+      "isLocal": false,
+      "locations": ["Automation1", "Automation2"]
+    },
+    {
+      "name": "userAdminPhilly",
+      "password": "legion2020",
+      "usedAs": ["UI_LOGIN", "API_LOGIN"],
+      "isUsed": false,
+      "userType": "Admin",
+      "isLocal": false,
+      "locations": ["Automation1"]
+    },
+    {
+      "name": "julie+storemanager1@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN", "API_LOGIN"],
+      "isUsed": false,
+      "userType": "StoreManager1",
+      "isLocal": false,
+      "locations": ["Automation1"]
+    },
+    {
+      "name": "julie+storemanager2@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN", "API_LOGIN"],
+      "isUsed": false,
+      "userType": "StoreManager2",
+      "isLocal": false,
+      "locations": ["Automation2"]
+    },
+    {
+      "name": "julie+teammember@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "TeamMember",
+      "isLocal": false,
+      "locations": ["Automation1"]
+    }
+  ],
+  "locations": [
+    {
+      "name": "Automation1",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "DolarGeneral"
+    },
+    {
+      "name": "Automation2",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "DolarGeneral"
+    }
+  ],
+  "employees": [
+    {
+      "name": "TestQA1",
+      "lastName": "Automation",
+      "role": "GENERAL MANAGER",
+      "id": "00000000-0000-0000-0000-000000000001",
+      "engagementId": "00000000-0000-0000-0000-000000000002",
+      "workerId": "00000000-0000-0000-0000-000000000003",
+      "pinNumber": "1234"
+    },
+    {
+      "name": "TestQA2",
+      "lastName": "Automation",
+      "role": "TEAM MEMBER",
+      "id": "00000000-0000-0000-0000-000000000004",
+      "engagementId": "00000000-0000-0000-0000-000000000005",
+      "workerId": "00000000-0000-0000-0000-000000000006",
+      "pinNumber": "5678"
+    }
+  ]
+}

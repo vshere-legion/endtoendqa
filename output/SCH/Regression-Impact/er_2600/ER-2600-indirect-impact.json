@@ -1,0 +1,583 @@
+{
+  "count": 96,
+  "automated": 61,
+  "manual": 35,
+  "cases": [
+    {
+      "id": 452969,
+      "title": "1.Verify Published schedules should show correct status on District Overview for Regular l",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 452971,
+      "title": "1.1 Verify Not Started schedules should show correct status on District Overview for Regul",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 452973,
+      "title": "1.2 Verify In Progress(Not Published) schedules should show correct status on District Ove",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 452976,
+      "title": "1.3 Update the Schedule status for any week from Published to Not Started/In Progress to P",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 452970,
+      "title": "2.Verify Published schedules should show correct status on District Overview for Parent Ch",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 452972,
+      "title": "2.1  Verify Not Started schedules should show correct status on District Overview for Pare",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 452974,
+      "title": "2.2 Verify In Progress(Not Published) schedules should show correct status on District Ove",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 452975,
+      "title": "2.3 Update the Schedule status for any week from Published to Not Started/In Progress to P",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 452979,
+      "title": "3_Verify the status of the parent location in District Overview page when a child location",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 452980,
+      "title": "3.1_Verify the status of the parent location in District Overview page when a child locati",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 452981,
+      "title": "4_Verify the status of the parent location in District Overview page when a child location",
+      "automated": false,
+      "section_id": 82113
+    },
+    {
+      "id": 453006,
+      "title": "1_Verify it shows peer sub-location roster employees on Multi-week view tab when any of th",
+      "automated": false,
+      "section_id": 82119
+    },
+    {
+      "id": 454450,
+      "title": "1. Verify Refresh button refreshes & shows the data correctly for locations on District Ma",
+      "automated": false,
+      "section_id": 82297
+    },
+    {
+      "id": 454451,
+      "title": "2. Verify Refresh button refreshes & shows the data correctly for locations on District Ma",
+      "automated": false,
+      "section_id": 82297
+    },
+    {
+      "id": 65683,
+      "title": "Verify the System Admin, district manager, Store Manager has the access by default.",
+      "automated": true,
+      "section_id": 6404
+    },
+    {
+      "id": 360938,
+      "title": "Verify District Manager can edit past demand forecast after enable the manage past demand ",
+      "automated": false,
+      "section_id": 6272
+    },
+    {
+      "id": 360939,
+      "title": "Verify District Manager cannot edit past demand forecast after disable the manage past dem",
+      "automated": false,
+      "section_id": 6272
+    },
+    {
+      "id": 244562,
+      "title": "Verify changing district on Overview page",
+      "automated": true,
+      "section_id": 43581
+    },
+    {
+      "id": 244563,
+      "title": "Verify changing district on Forecast page",
+      "automated": true,
+      "section_id": 43581
+    },
+    {
+      "id": 244564,
+      "title": "Verify changing district on Schedule page",
+      "automated": true,
+      "section_id": 43581
+    },
+    {
+      "id": 244565,
+      "title": "Verify searching and selecting district on Overview page",
+      "automated": true,
+      "section_id": 43582
+    },
+    {
+      "id": 244566,
+      "title": "Verify searching and selecting district on Forecast page",
+      "automated": true,
+      "section_id": 43582
+    },
+    {
+      "id": 244567,
+      "title": "Verify searching and selecting district on Schedule page",
+      "automated": true,
+      "section_id": 43582
+    },
+    {
+      "id": 244584,
+      "title": "Verify selecting district on region schedule page",
+      "automated": true,
+      "section_id": 43589
+    },
+    {
+      "id": 244585,
+      "title": "Verify selecting location on district schedule tab",
+      "automated": true,
+      "section_id": 43589
+    },
+    {
+      "id": 244589,
+      "title": "Verify selecting district on region Compliance page",
+      "automated": true,
+      "section_id": 43590
+    },
+    {
+      "id": 244590,
+      "title": "Verify selecting location on district Compliance tab",
+      "automated": true,
+      "section_id": 43590
+    },
+    {
+      "id": 244592,
+      "title": "Verify selecting district on SM Compliance page",
+      "automated": true,
+      "section_id": 43591
+    },
+    {
+      "id": 244593,
+      "title": "Verify selecting region on district Compliance page",
+      "automated": true,
+      "section_id": 43591
+    },
+    {
+      "id": 244599,
+      "title": "Verify selecting district on region Report page",
+      "automated": true,
+      "section_id": 43592
+    },
+    {
+      "id": 244600,
+      "title": "Verify selecting location on district Report tab",
+      "automated": true,
+      "section_id": 43592
+    },
+    {
+      "id": 244601,
+      "title": "Verify selecting location on district Report tab",
+      "automated": true,
+      "section_id": 43593
+    },
+    {
+      "id": 244602,
+      "title": "Verify selecting district on region Report page",
+      "automated": true,
+      "section_id": 43593
+    },
+    {
+      "id": 244609,
+      "title": "Verify selecting district on region Report page",
+      "automated": true,
+      "section_id": 43594
+    },
+    {
+      "id": 244610,
+      "title": "Verify selecting location on district Report tab",
+      "automated": true,
+      "section_id": 43594
+    },
+    {
+      "id": 244611,
+      "title": "Verify selecting location on district Report tab",
+      "automated": true,
+      "section_id": 43595
+    },
+    {
+      "id": 244612,
+      "title": "Verify selecting district on region Report page",
+      "automated": true,
+      "section_id": 43595
+    },
+    {
+      "id": 244619,
+      "title": "Verify location navigation is not show on Moderation page when selecting district on Newsf",
+      "automated": true,
+      "section_id": 43596
+    },
+    {
+      "id": 97512,
+      "title": "Validate the content in District Summary widget",
+      "automated": true,
+      "section_id": 12650
+    },
+    {
+      "id": 97513,
+      "title": "Validate district number in District Summary widget",
+      "automated": true,
+      "section_id": 12650
+    },
+    {
+      "id": 97522,
+      "title": "Validate the content in District Summary widget",
+      "automated": true,
+      "section_id": 12650
+    },
+    {
+      "id": 97565,
+      "title": "Validate the district list",
+      "automated": true,
+      "section_id": 12658
+    },
+    {
+      "id": 97566,
+      "title": "Validate click one district",
+      "automated": true,
+      "section_id": 12658
+    },
+    {
+      "id": 97567,
+      "title": "Validate go back from one district",
+      "automated": true,
+      "section_id": 12658
+    },
+    {
+      "id": 97568,
+      "title": "Validate click given district and given week",
+      "automated": true,
+      "section_id": 12658
+    },
+    {
+      "id": 97569,
+      "title": "Validate go back from one district and one week",
+      "automated": true,
+      "section_id": 12658
+    },
+    {
+      "id": 97600,
+      "title": "Validate the content of DISTRICT SUMMARY smart card for current/future weeks",
+      "automated": true,
+      "section_id": 12664
+    },
+    {
+      "id": 97601,
+      "title": "Validate the data DISTRICT SUMMARY smart card for current/future weeks",
+      "automated": true,
+      "section_id": 12664
+    },
+    {
+      "id": 97602,
+      "title": "Validate the content of DISTRICT SUMMARY smart card for past weeks",
+      "automated": true,
+      "section_id": 12664
+    },
+    {
+      "id": 97603,
+      "title": "Validate the data on DISTRICT SUMMARY smart card for past weeks",
+      "automated": true,
+      "section_id": 12664
+    },
+    {
+      "id": 97604,
+      "title": "Validate the data above Clocked Hrs on DISTRICT SUMMARY smart card for past weeks",
+      "automated": true,
+      "section_id": 12664
+    },
+    {
+      "id": 97605,
+      "title": "Validate the data above Projected Hrs on DISTRICT SUMMARY smart card for current/future we",
+      "automated": true,
+      "section_id": 12664
+    },
+    {
+      "id": 97606,
+      "title": "Validate tooltip of Scheduled Hrs bar on DISTRICT SUMMARY smart card",
+      "automated": true,
+      "section_id": 12664
+    },
+    {
+      "id": 97607,
+      "title": "Validate tooltip of Projected Hrs bar on DISTRICT SUMMARY smart card",
+      "automated": true,
+      "section_id": 12664
+    },
+    {
+      "id": 97621,
+      "title": "Validate Schedule Status, Score, Budgeted Hours, Scheduled Hours for selected district",
+      "automated": true,
+      "section_id": 12666
+    },
+    {
+      "id": 97668,
+      "title": "Validate the district list",
+      "automated": true,
+      "section_id": 12678
+    },
+    {
+      "id": 97669,
+      "title": "Validate click one district",
+      "automated": true,
+      "section_id": 12678
+    },
+    {
+      "id": 97670,
+      "title": "Validate the data for selected district",
+      "automated": true,
+      "section_id": 12678
+    },
+    {
+      "id": 97671,
+      "title": "Validate go back from selected district in current week",
+      "automated": true,
+      "section_id": 12678
+    },
+    {
+      "id": 97672,
+      "title": "Validate click given district and given week",
+      "automated": true,
+      "section_id": 12678
+    },
+    {
+      "id": 97689,
+      "title": "Validate changing districts on Compliance",
+      "automated": true,
+      "section_id": 12682
+    },
+    {
+      "id": 97708,
+      "title": "Validate the district list",
+      "automated": true,
+      "section_id": 12686
+    },
+    {
+      "id": 97709,
+      "title": "Validate click one district",
+      "automated": true,
+      "section_id": 12686
+    },
+    {
+      "id": 97716,
+      "title": "Validate the content on Districts\nwith Violations smart card",
+      "automated": true,
+      "section_id": 12690
+    },
+    {
+      "id": 97717,
+      "title": "Validate the data on Districts\nwith Violations smart card",
+      "automated": true,
+      "section_id": 12690
+    },
+    {
+      "id": 97750,
+      "title": "Validate drilling into a district",
+      "automated": true,
+      "section_id": 12698
+    },
+    {
+      "id": 97753,
+      "title": "Validate changing dates and district",
+      "automated": true,
+      "section_id": 12698
+    },
+    {
+      "id": 70546,
+      "title": "Validate the presence of district",
+      "automated": true,
+      "section_id": 7143
+    },
+    {
+      "id": 70549,
+      "title": "Validate changing districts on Dashboard",
+      "automated": true,
+      "section_id": 7143
+    },
+    {
+      "id": 70591,
+      "title": "Validate changing districts on Schedule",
+      "automated": true,
+      "section_id": 7153
+    },
+    {
+      "id": 70620,
+      "title": "Validate Schedule Score calculating for district on SCHEDULE SCORE smart card",
+      "automated": false,
+      "section_id": 7158
+    },
+    {
+      "id": 70643,
+      "title": "Validate changing districts on Timesheet",
+      "automated": true,
+      "section_id": 7161
+    },
+    {
+      "id": 70665,
+      "title": "Validate click other district in past week",
+      "automated": true,
+      "section_id": 7166
+    },
+    {
+      "id": 70672,
+      "title": "Validate changing districts on Compliance",
+      "automated": true,
+      "section_id": 7168
+    },
+    {
+      "id": 70697,
+      "title": "Validate user has access to 1 district",
+      "automated": true,
+      "section_id": 7176
+    },
+    {
+      "id": 70698,
+      "title": "Validate user has access to multiple districts",
+      "automated": true,
+      "section_id": 7176
+    },
+    {
+      "id": 70700,
+      "title": "Validate navigating back to district view",
+      "automated": true,
+      "section_id": 7176
+    },
+    {
+      "id": 70701,
+      "title": "Validate changing districts",
+      "automated": true,
+      "section_id": 7176
+    },
+    {
+      "id": 449542,
+      "title": "Validate peerToPeerShiftView under getGlobalSchedulePreferences when Show only shifts for ",
+      "automated": false,
+      "section_id": 81472
+    },
+    {
+      "id": 452919,
+      "title": "Validate Peer-to-Peer LG, schedule note in SM view.",
+      "automated": false,
+      "section_id": 82104
+    },
+    {
+      "id": 452920,
+      "title": "Validate Peer-to-Peer LG, schedule note in TM view.",
+      "automated": false,
+      "section_id": 82104
+    },
+    {
+      "id": 452921,
+      "title": "Validate Peer-to-Peer LG, Copy/ Move shift to another location",
+      "automated": false,
+      "section_id": 82104
+    },
+    {
+      "id": 452922,
+      "title": "Validate Peer-to-Peer LG, publish schedule only for one child location, schedule note in S",
+      "automated": false,
+      "section_id": 82104
+    },
+    {
+      "id": 452923,
+      "title": "Validate Peer-to-Peer LG, publish schedule only for one child location, schedule note in T",
+      "automated": false,
+      "section_id": 82104
+    },
+    {
+      "id": 462599,
+      "title": "Verify the budget values display correct on all pages for PeerToPeer  child location when ",
+      "automated": false,
+      "section_id": 83518
+    },
+    {
+      "id": 473227,
+      "title": "Verify the district summary",
+      "automated": false,
+      "section_id": 84863
+    },
+    {
+      "id": 4605252,
+      "title": "Verify view schedule as district manager",
+      "automated": false,
+      "section_id": 837740
+    },
+    {
+      "id": 4616013,
+      "title": "Verify clopening rules enforced across locations",
+      "automated": false,
+      "section_id": 839574
+    },
+    {
+      "id": 4616014,
+      "title": "Verify consecutive day limits enforced across locations",
+      "automated": false,
+      "section_id": 839575
+    },
+    {
+      "id": 4616015,
+      "title": "Verify overlapping shifts not created across locations",
+      "automated": false,
+      "section_id": 839576
+    },
+    {
+      "id": 458533,
+      "title": "Verify the budget values display correct on all pages for PeertoPeerchild location when en",
+      "automated": false,
+      "section_id": 82878
+    },
+    {
+      "id": 458535,
+      "title": "Verify the cannot edit budget on PeerToPeer parent level when enable display budget config",
+      "automated": false,
+      "section_id": 82878
+    },
+    {
+      "id": 458548,
+      "title": "Verify the budget values display correct on all pages for PeerToPeer  child location when ",
+      "automated": false,
+      "section_id": 82878
+    },
+    {
+      "id": 459639,
+      "title": "Verify the budget values display correct on all pages for PeertoPeerchild location when en",
+      "automated": false,
+      "section_id": 83095
+    },
+    {
+      "id": 459643,
+      "title": "Verify the budget values display correct on all pages for PeerToPeer  child location when ",
+      "automated": false,
+      "section_id": 83099
+    },
+    {
+      "id": 473976,
+      "title": "Verify that dashboard status,schedule overview status for internal admin at district level",
+      "automated": false,
+      "section_id": 84954
+    }
+  ]
+}

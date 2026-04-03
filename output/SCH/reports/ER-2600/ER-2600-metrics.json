@@ -1,0 +1,56 @@
+{
+  "story_id": "ER-2600",
+  "team": "SCH",
+  "timestamp": "2026-04-03T02:51:30.473191+00:00",
+  "test_execution": {
+    "total": 11,
+    "passed": 8,
+    "failed": 2,
+    "flaky": 1,
+    "pass_rate": 72.7,
+    "duration_ms": 3000
+  },
+  "failure_analysis": {
+    "true_failures": 1,
+    "flaky": 1,
+    "env_issues": 0
+  },
+  "quality_indicators": {
+    "pass_rate": 72.7,
+    "flakiness_index": 9.1,
+    "sla_compliance": true,
+    "regression_risk": "HIGH"
+  },
+  "datadog_metrics": [
+    {
+      "metric": "qa.sch.pass_rate",
+      "value": 72.7,
+      "type": "gauge"
+    },
+    {
+      "metric": "qa.sch.total_tests",
+      "value": 11,
+      "type": "count"
+    },
+    {
+      "metric": "qa.sch.failures",
+      "value": 2,
+      "type": "count"
+    },
+    {
+      "metric": "qa.sch.flakiness",
+      "value": 9.1,
+      "type": "gauge"
+    },
+    {
+      "metric": "qa.sch.duration_ms",
+      "value": 3000,
+      "type": "gauge"
+    },
+    {
+      "metric": "qa.sch.true_failures",
+      "value": 1,
+      "type": "count"
+    }
+  ]
+}

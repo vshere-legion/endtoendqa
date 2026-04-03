@@ -1,0 +1,5 @@
+- [QA Pipeline Architecture v6](project_architecture.md) — 3-layer Argo DAG with 10 agents, 3 evaluation skills, Claude Opus 4.6
+- [Playwright Framework Tag Convention](reference_playwright_tags.md) — Tag taxonomy from Playwright-Nishant framework for Gherkin scenario generation
+- [Legion QA Teams](reference_legion_teams.md) — 11 active teams: SCH, TA, Platform, PLT-Core/Int/Ops, LRB, EV-Com/LIP/ELM, GENAI
+- [Playwright Locator Strategy](feedback_locator_strategy.md) — Built-in locators only; CSS/XPath needs user approval in interactive mode
+- [Self-Improvement Lessons](lessons.md) — Corrections log with rules to prevent repeating mistakes. REVIEW AT SESSION START.

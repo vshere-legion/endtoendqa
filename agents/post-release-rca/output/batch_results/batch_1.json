@@ -1,0 +1,30 @@
+[
+  {
+    "defect_id": "SCH-22428",
+    "project": "Scheduling",
+    "environment_leaked": "Staging",
+    "severity": "S2 - High",
+    "summary": "Staging | DataDog log limit | Massive ShiftOPVariableContainer Logs",
+    "linked_jira_tickets": [],
+    "linked_ticket_description": "",
+    "linked_prs": [
+      "https://github.com/legionco/enterprise/pull/45223"
+    ],
+    "pr_summaries": [
+      "Line 1: Removed logger.info() call in ShiftOPVariableContainer.createDailyShift() — single line deletion in shift validation error path\nLine 2: Info-level logging on optimizer hot path was generating 2.2M log entries for forac enterprise with 6AM-6AM operating hours"
+    ],
+    "defect_description": "1. What: Massive volume of ShiftOPVariableContainer logs flooding Datadog on staging (2.2M entries)\n2. What changed: The forac enterprise configuration with 6AM-6AM operating hours created a dead zone generating millions of rejected shift attempts\n3. Why: Each rejected invalid shift triggered a logger.info() call, producing 2.2M log entries per guidance refresh",
+    "pr_description": "1. What: Removed logger.info() call for invalid shift validation failures in ShiftOPVariableContainer.createDailyShift()\n2. What changed: Single line removal — logger.info(msg) deleted; addCodeDiagnostics(msg) preserved for scheduling digest\n3. Why: The logging was producing 2.2M entries for the forac enterprise due to a dead zone in the 6AM-6AM operating hours configuration",
+    "code_description": "1. What: File ShiftOPVariableContainer.java line 509 — removed logger.info(msg) in shift validation error path\n2. What changed: Diagnostic message no longer sent to application logger; still captured via sp().addCodeDiagnostics(msg) for scheduling digest\n3. Why: Info-level log was firing for every invalid shift attempt — expected behavior during optimization but not useful as application logs",
+    "why_qa_missed": "Environment",
+    "qa_recommendation": "Add Datadog log volume monitoring as a standard regression check. Create performance tests for edge-case operating hours configurations (6AM-6AM, 24-hour, cross-boundary). Monitor optimizer log output during staging schedule generation runs.",
+    "why_dev_missed": "Oversight",
+    "dev_recommendation": "Add log-level review gate for optimizer hot paths in code review. Establish logging standards: use logger.debug()/trace() for expected validation failures, reserve info for business events. Review DynamicShifts secondary start-time paths (lines 276-297) that generate always-invalid start times.",
+    "five_whys": "1. Why 2.2M logs? → Every rejected shift logged at info level\n2. Why so many rejections? → 6AM-6AM config created dead zone with invalid start times\n3. Why invalid start times? → Secondary path checks businessEndMinutes(1800) not dayEnd(1440)\n4. Why logger.info()? → Added for debugging, never adjusted for production volume\n5. Why not caught? → No performance/log-volume testing for optimizer hot paths",
+    "ishikawa_category": "Method",
+    "causal_classification": "Inappropriate log level on high-frequency optimization code path. The logging was added during development for debugging purposes and was never reviewed for production volume impact. The forac enterprise's 6AM-6AM operating hours configuration amplified the issue by creating a dead zone that generates thousands of always-rejected shift start times per worker/day/role combination.",
+    "evidence_grade": "A — Strong",
+    "counterfactual": "If logger.info() had been logger.debug() or absent, the 2.2M log entries would not have been generated. If the secondary start-time path in DynamicShifts capped against dayEnd instead of businessEndMinutes, fewer invalid shifts would have been attempted in the first place.",
+    "rca_confidence": "High — single clear root cause with straightforward fix verified by log volume drop post-deployment"
+  }
+]

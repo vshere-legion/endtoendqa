@@ -1,0 +1,513 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: qaendtoend-vikas
+  namespace: argo
+  labels:
+    app: qa-pipeline
+    version: v6
+    owner: vshere
+  annotations:
+    description: "AI QA SDLC Pipeline — Full DAG with Claude Opus 4.6 agents and evaluation gates"
+    workflows.argoproj.io/creator: "vshere@legion.co"
+    argo-server: "argo.ops.dev.legion.work"
+spec:
+  entrypoint: qa-pipeline-dag
+  arguments:
+    parameters:
+      - name: story-id
+        value: "PROJ-1234"
+        description: "Jira Story ID (e.g., PROJ-1234) or BACKLOG for cron runs"
+      - name: trigger-source
+        value: "slack"
+        description: "claude-project | slack | cron-scheduled"
+      - name: requested-by
+        value: "vshere@legion.co"
+        description: "User or system that triggered the pipeline"
+
+  templates:
+    # ============================================================
+    # MAIN DAG — Orchestrates all nodes
+    # ============================================================
+    - name: qa-pipeline-dag
+      dag:
+        tasks:
+          # --- Layer 1 Acknowledgment ---
+          - name: layer1-acknowledge
+            template: layer1-acknowledge
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: trigger-source
+                  value: "{{workflow.parameters.trigger-source}}"
+                - name: requested-by
+                  value: "{{workflow.parameters.requested-by}}"
+
+          # --- Node 1: Review Jira US / PRD ---
+          - name: node1-jira-prd-review
+            template: node1-jira-prd-review
+            dependencies: [layer1-acknowledge]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+
+          # --- Node 1C: Evaluation Review (Skill) ---
+          - name: node1c-evaluation-review
+            template: node1c-evaluation-review
+            dependencies: [node1-jira-prd-review]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: node-output
+                  value: "{{tasks.node1-jira-prd-review.outputs.parameters.result}}"
+
+          # --- Node 2: Test Planning — GWT Scenarios ---
+          - name: node2-test-planning
+            template: node2-test-planning
+            dependencies: [node1c-evaluation-review]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: node-output
+                  value: "{{tasks.node1c-evaluation-review.outputs.parameters.result}}"
+
+          # --- Node 2C: Gherkin Scenarios Evaluation (Skill) ---
+          - name: node2c-gherkin-evaluation
+            template: node2c-gherkin-evaluation
+            dependencies: [node2-test-planning]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: node-output
+                  value: "{{tasks.node2-test-planning.outputs.parameters.result}}"
+
+          # --- Node 3: Create Playwright Scripts ---
+          - name: node3-playwright-codegen
+            template: node3-playwright-codegen
+            dependencies: [node2c-gherkin-evaluation]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: node-output
+                  value: "{{tasks.node2c-gherkin-evaluation.outputs.parameters.result}}"
+
+          # --- Node 3C: Test Script Review (Skill) ---
+          - name: node3c-script-review
+            template: node3c-script-review
+            dependencies: [node3-playwright-codegen]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: node-output
+                  value: "{{tasks.node3-playwright-codegen.outputs.parameters.result}}"
+
+          # --- Node 4: Execute Test Suite ---
+          - name: node4-test-execution
+            template: node4-test-execution
+            dependencies: [node3c-script-review]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: node-output
+                  value: "{{tasks.node3c-script-review.outputs.parameters.result}}"
+
+          # --- Node 5: Regression Impact Analysis ---
+          - name: node5-regression-analysis
+            template: node5-regression-analysis
+            dependencies: [node4-test-execution]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: node-output
+                  value: "{{tasks.node4-test-execution.outputs.parameters.result}}"
+
+          # --- Node 6: Analyze Results & Report ---
+          - name: node6-results-report
+            template: node6-results-report
+            dependencies: [node4-test-execution, node5-regression-analysis]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: test-results
+                  value: "{{tasks.node4-test-execution.outputs.parameters.result}}"
+                - name: regression-scope
+                  value: "{{tasks.node5-regression-analysis.outputs.parameters.result}}"
+
+          # --- Node 7: Bug Triage & Routing ---
+          - name: node7-bug-triage
+            template: node7-bug-triage
+            dependencies: [node6-results-report]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: node-output
+                  value: "{{tasks.node6-results-report.outputs.parameters.result}}"
+
+          # --- Layer 3: Observability ---
+          - name: layer3-observability
+            template: layer3-observability
+            dependencies: [node7-bug-triage]
+            arguments:
+              parameters:
+                - name: story-id
+                  value: "{{workflow.parameters.story-id}}"
+                - name: node-output
+                  value: "{{tasks.node7-bug-triage.outputs.parameters.result}}"
+
+    # ============================================================
+    # NODE TEMPLATES (Smoke Test — Alpine containers)
+    # ============================================================
+
+    # --- Layer 1: Acknowledge trigger ---
+    - name: layer1-acknowledge
+      inputs:
+        parameters:
+          - name: story-id
+          - name: trigger-source
+          - name: requested-by
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "LAYER 1 — Job Accepted"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Trigger Source: {{inputs.parameters.trigger-source}}"
+            echo "Requested By: {{inputs.parameters.requested-by}}"
+            echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "Status: ACCEPTED"
+            echo "Next: Layer 2 Node 1 (Review Jira US / PRD)"
+            echo "========================================"
+            echo '{"status":"accepted","story_id":"{{inputs.parameters.story-id}}","source":"{{inputs.parameters.trigger-source}}"}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Node 1: Review Jira US / PRD ---
+    - name: node1-jira-prd-review
+      inputs:
+        parameters:
+          - name: story-id
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "NODE 1 — Review Jira US / PRD"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Action: Fetching User Stories from Jira / PRD from Confluence"
+            echo "Action: Parsing requirements, acceptance criteria, NFRs"
+            echo "Status: COMPLETE"
+            echo "Output: Structured requirements summary"
+            echo "========================================"
+            echo '{"story_id":"{{inputs.parameters.story-id}}","requirements_fetched":true,"acceptance_criteria":3,"nfrs":2}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Node 1C: Evaluation Review (Skill) ---
+    - name: node1c-evaluation-review
+      inputs:
+        parameters:
+          - name: story-id
+          - name: node-output
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "NODE 1C — Evaluation Review [SKILL]"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Input: {{inputs.parameters.node-output}}"
+            echo "Check: Acceptance Criteria — PASS"
+            echo "Check: User Story Format — PASS"
+            echo "Check: NFRs (perf, security, accessibility) — PASS"
+            echo "Gate Status: APPROVED"
+            echo "Next: Node 2 (Test Planning)"
+            echo "========================================"
+            echo '{"gate_status":"APPROVED","blocking_issues":0,"warnings":0}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Node 2: Test Planning — GWT Scenarios ---
+    - name: node2-test-planning
+      inputs:
+        parameters:
+          - name: story-id
+          - name: node-output
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "NODE 2 — Test Planning (GWT Scenarios)"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Action: Reading validated requirements"
+            echo "Action: Generating Gherkin scenarios (Given/When/Then)"
+            echo "Action: Planning edge cases, persona + boundary cases"
+            echo "Output: 8 Gherkin scenarios generated"
+            echo "Status: COMPLETE"
+            echo "========================================"
+            echo '{"scenarios_generated":8,"happy_path":3,"edge_cases":3,"negative":2}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Node 2C: Gherkin Scenarios Evaluation (Skill) ---
+    - name: node2c-gherkin-evaluation
+      inputs:
+        parameters:
+          - name: story-id
+          - name: node-output
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "NODE 2C — Gherkin Evaluation [SKILL]"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Input: {{inputs.parameters.node-output}}"
+            echo "Check: Gherkin format (Given/When/Then) — PASS"
+            echo "Check: Examples table present — PASS"
+            echo "Check: Coverage (happy + negative) — PASS"
+            echo "Check: Tags present — PASS"
+            echo "Gate Status: APPROVED"
+            echo "Next: Node 3 (Playwright Script Generation)"
+            echo "========================================"
+            echo '{"gate_status":"APPROVED","approved_scenarios":8,"rejected_scenarios":0}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Node 3: Create Playwright Scripts ---
+    - name: node3-playwright-codegen
+      inputs:
+        parameters:
+          - name: story-id
+          - name: node-output
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "NODE 3 — Playwright Script Generation"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Action: Generating Playwright TypeScript test scripts"
+            echo "Locators: getByRole(15), getByText(8), getByLabel(5), getByTestId(3)"
+            echo "Scripts: 5 test files generated"
+            echo "Action: Committed to GitHub feature branch"
+            echo "Status: COMPLETE"
+            echo "========================================"
+            echo '{"scripts_generated":5,"locators":{"getByRole":15,"getByText":8,"getByLabel":5,"getByTestId":3}}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Node 3C: Test Script Review (Skill) ---
+    - name: node3c-script-review
+      inputs:
+        parameters:
+          - name: story-id
+          - name: node-output
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "NODE 3C — Script Review [SKILL]"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Input: {{inputs.parameters.node-output}}"
+            echo "Check: Locator priority (getByRole first) — PASS"
+            echo "Check: No XPath or hardcoded IDs — PASS"
+            echo "Check: No hardcoded waits — PASS"
+            echo "Check: Assertions present — PASS"
+            echo "Gate Status: APPROVED"
+            echo "Next: Node 4 (Execute Test Suite)"
+            echo "========================================"
+            echo '{"gate_status":"APPROVED","approved_files":5,"rejected_files":0}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Node 4: Execute Test Suite ---
+    - name: node4-test-execution
+      inputs:
+        parameters:
+          - name: story-id
+          - name: node-output
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "NODE 4 — Execute Test Suite"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Action: Running Playwright tests with --trace on"
+            echo "Browser: chromium"
+            echo "Total: 42 | Passed: 38 | Failed: 3 | Flaky: 1"
+            echo "Duration: 180s"
+            echo "Traces: collected for all tests"
+            echo "Screenshots: captured for failures"
+            echo "Status: COMPLETE"
+            echo "========================================"
+            echo '{"total":42,"passed":38,"failed":3,"flaky":1,"duration_ms":180000}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Node 5: Regression Impact Analysis ---
+    - name: node5-regression-analysis
+      inputs:
+        parameters:
+          - name: story-id
+          - name: node-output
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "NODE 5 — Regression Impact Analysis"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Action: Analyzing code changes for impacted tests"
+            echo "Impacted Automated: 12 tests"
+            echo "Impacted Manual: 3 tests"
+            echo "Not Impacted: 27 tests"
+            echo "Coverage Gaps: 1 identified"
+            echo "Status: COMPLETE"
+            echo "========================================"
+            echo '{"impacted_automated":12,"impacted_manual":3,"not_impacted":27,"coverage_gaps":1}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Node 6: Analyze Results & Report ---
+    - name: node6-results-report
+      inputs:
+        parameters:
+          - name: story-id
+          - name: test-results
+          - name: regression-scope
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "NODE 6 — Analyze Results & Report"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Test Results: {{inputs.parameters.test-results}}"
+            echo "Regression Scope: {{inputs.parameters.regression-scope}}"
+            echo "Action: Analyzing traces, screenshots, error logs"
+            echo "True Failures: 3 | Flaky: 1 | Env Issues: 0"
+            echo "Pass Rate: 90.5%"
+            echo "GitHub Issues Created: 3"
+            echo "Datadog Metrics: pushed"
+            echo "Status: COMPLETE"
+            echo "========================================"
+            echo '{"pass_rate":90.5,"true_failures":3,"flaky":1,"github_issues_created":3,"datadog_pushed":true}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Node 7: Bug Triage & Routing ---
+    - name: node7-bug-triage
+      inputs:
+        parameters:
+          - name: story-id
+          - name: node-output
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "NODE 7 — Bug Triage & Routing"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Action: Auto-labeling GitHub Issues (severity, component)"
+            echo "Action: Routing to QA Principal Engineer for approval"
+            echo "Action: Slack notification to #qa-end-to-end-vikas"
+            echo "Triaged: 3 issues | P1: 1 | P2: 2"
+            echo "Human Gate: awaiting QA PE approval"
+            echo "Status: COMPLETE"
+            echo "========================================"
+            echo '{"triaged_issues":3,"p1":1,"p2":2,"human_gate":"awaiting_approval"}' > /tmp/result.json
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/result.json
+
+    # --- Layer 3: Observability & Feedback ---
+    - name: layer3-observability
+      inputs:
+        parameters:
+          - name: story-id
+          - name: node-output
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args:
+          - |
+            echo "========================================"
+            echo "LAYER 3 — Observability & Feedback"
+            echo "========================================"
+            echo "Story ID: {{inputs.parameters.story-id}}"
+            echo "Triage Report: {{inputs.parameters.node-output}}"
+            echo "Action: Datadog dashboards updated"
+            echo "Action: Slack summary posted to #qa-end-to-end-vikas"
+            echo "Action: Audit trail persisted to S3 + GitHub"
+            echo "Pipeline: COMPLETE"
+            echo "========================================"
+            echo "PIPELINE COMPLETE — qaendtoend-vikas"

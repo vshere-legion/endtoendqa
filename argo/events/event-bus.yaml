@@ -1,0 +1,11 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventBus
+metadata:
+  name: default
+  namespace: argo-events
+spec:
+  # NATS-based event bus for reliable event delivery
+  nats:
+    native:
+      replicas: 3
+      auth: token

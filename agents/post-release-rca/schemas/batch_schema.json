@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Schema for each batch JSON file produced by sub-agents. Each file contains an array of defect RCA results.",
+  "type": "object",
+  "properties": {
+    "batch_id": {
+      "type": "integer",
+      "description": "Batch number (1-indexed)"
+    },
+    "defects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["defect_id", "summary", "defect_description", "why_qa_missed", "qa_recommendation", "why_dev_missed", "dev_recommendation"],
+        "properties": {
+          "defect_id": {
+            "type": "string",
+            "description": "Jira issue key (e.g., PLAT-1234)"
+          },
+          "project": {
+            "type": "string",
+            "description": "Project display name"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Defect summary from Jira"
+          },
+          "severity": {
+            "type": "string",
+            "description": "Severity value (e.g., S1 - Urgent, S2 - High)"
+          },
+          "environment_leaked": {
+            "type": "string",
+            "description": "Environment where defect leaked: Production, UAT, or EA",
+            "enum": ["Production", "UAT", "EA"]
+          },
+          "linked_jira_tickets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": { "type": "string", "description": "Jira issue key (e.g., PLAT-500)" },
+                "summary": { "type": "string", "description": "Issue summary" },
+                "relationship": { "type": "string", "description": "Link relationship (e.g., is child of, relates to)" }
+              }
+            },
+            "description": "Linked Jira issues from issuelinks field"
+          },
+          "linked_ticket_description": {
+            "type": "string",
+            "description": "3-line summary of linked Jira tickets: What was the issue? What was changed? Why?",
+            "maxLength": 500
+          },
+          "linked_prs": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of linked PR URLs"
+          },
+          "pr_summaries": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "2-line summary for each PR: what changed & why. Parallel array to linked_prs."
+          },
+          "defect_description": {
+            "type": "string",
+            "description": "3-line summary from Jira description/comments: What was the issue? What was changed? Why?"
+          },
+          "pr_description": {
+            "type": "string",
+            "description": "3-line summary from PR descriptions: What was the issue? What was changed? Why?"
+          },
+          "code_description": {
+            "type": "string",
+            "description": "3-line summary from code diffs: What was the issue? What was changed? Why?"
+          },
+          "why_qa_missed": {
+            "type": "string",
+            "description": "One-word reason why QA missed this defect",
+            "enum": ["Oversight", "Coverage", "Environment", "Data", "Timing", "Complexity", "Regression", "Integration", "Edge-case", "Requirement"]
+          },
+          "qa_recommendation": {
+            "type": "string",
+            "description": "One-line actionable recommendation for QA to avoid missing this kind of defect",
+            "maxLength": 200
+          },
+          "why_dev_missed": {
+            "type": "string",
+            "description": "One-word reason why dev missed this in development lifecycle",
+            "enum": ["Oversight", "Refactor", "Merge", "Logic", "Dependency", "Assumption", "Edge-case", "Concurrency", "Migration", "Requirement"]
+          },
+          "dev_recommendation": {
+            "type": "string",
+            "description": "One-line actionable recommendation for dev to avoid this kind of defect",
+            "maxLength": 200
+          }
+        }
+      }
+    }
+  }
+}

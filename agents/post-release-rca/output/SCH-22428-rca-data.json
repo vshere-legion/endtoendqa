@@ -1,0 +1,56 @@
+{
+  "defect_id": "SCH-22428",
+  "summary": "Staging | DataDog log limit | Massive ShiftOPVariableContainer Logs",
+  "status": "Released",
+  "priority": "Medium",
+  "type": "Bug",
+  "reporter": "Stoneman Huang",
+  "assignee": "Valentin Tutunaru",
+  "labels": ["released-to-ea", "released-to-production", "released-to-uat"],
+  "fix_pr": {
+    "url": "https://github.com/legionco/enterprise/pull/45223",
+    "title": "SCH-22428: Remove excessive invalid shift logging",
+    "state": "merged",
+    "closed_at": "2026-03-03T18:28:50Z",
+    "files_changed": ["core/src/main/java/com/legion/core/schedule/optimization/staffing/variable/ShiftOPVariableContainer.java"],
+    "lines_added": 0,
+    "lines_removed": 1
+  },
+  "rca": {
+    "problem_statement": "The forac enterprise on staging generated 2.2M log entries in Datadog from ShiftOPVariableContainer.createDailyShift() due to info-level logging on a high-frequency optimization hot path",
+    "root_cause": "Inappropriate log level (info) on a high-frequency code path — every rejected invalid shift was logged during optimization",
+    "contributing_factors": [
+      "6AM-6AM operating hours configuration creating dead zone with always-rejected start times",
+      "Secondary start-time paths checking businessEndMinutes instead of capped dayEnd",
+      "Scale multiplier: worker × day × role × duration × 8+ weeks"
+    ],
+    "trigger": "Guidance refresh on forac enterprise with 6AM-6AM operating hours",
+    "classification": {
+      "defect_type": "Performance / Observability",
+      "root_cause_category": "Inappropriate Log Level",
+      "phase_introduced": "Development",
+      "phase_detected": "Operations",
+      "escape_reason": "No log volume testing for edge-case configurations"
+    },
+    "five_why": [
+      "2.2M logs generated → Every rejected shift logged at info level",
+      "So many rejections → 6AM-6AM config created dead zone with invalid start times",
+      "Invalid start times generated → Secondary path checks businessEndMinutes not dayEnd",
+      "logger.info() used → Added for debugging, never adjusted for production volume",
+      "Not caught earlier → No performance/log-volume testing for optimizer hot paths"
+    ],
+    "impact": {
+      "functional": "None",
+      "performance": "Minimal",
+      "observability": "HIGH — 2.2M logs polluted Datadog",
+      "cost": "Datadog ingestion cost"
+    },
+    "recommendations": [
+      "Add log-level review gate for optimizer hot paths",
+      "Add Datadog log volume alerts (>100K entries/hour)",
+      "Use logger.debug()/trace() for expected validation failures",
+      "Add performance test for edge-case operating hours configurations",
+      "Review DynamicShifts secondary start-time paths (lines 276-297)"
+    ]
+  }
+}

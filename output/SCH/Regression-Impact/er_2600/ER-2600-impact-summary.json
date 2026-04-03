@@ -1,0 +1,68 @@
+{
+  "story_id": "ER-2600",
+  "feature": "Auto-transition employee shift across locations in group and district",
+  "analysis_phases": {
+    "phase1_testrail": {
+      "source": "TestRail Master Suite (Project 10, Suite 190)",
+      "total_suite": 8017,
+      "direct_impact": {
+        "total": 333,
+        "automated": 53,
+        "manual": 280
+      },
+      "indirect_impact": {
+        "total": 96,
+        "automated": 61,
+        "manual": 35
+      }
+    },
+    "phase2_automation_code": {
+      "source": "Playwright framework teams/sch/",
+      "impacted_page_objects": 4,
+      "impacted_step_files": 5,
+      "impacted_feature_files": 16,
+      "impacted_scenarios": 70,
+      "by_priority": {
+        "must_run_high": { "features": 7, "scenarios": 38 },
+        "should_run_medium": { "features": 6, "scenarios": 29 },
+        "can_skip_low": { "features": 4, "scenarios": 13 }
+      }
+    },
+    "phase3_dev_code": {
+      "source": "Frontend (console-ui) + Backend (enterprise)",
+      "backend": {
+        "critical_components": 5,
+        "high_impact_components": 5,
+        "medium_impact_components": 4,
+        "key_classes": [
+          "BusinessUtil.getLocationGroupCluster() — peer location discovery",
+          "GroupSchedulingProblem — group-level scheduling orchestration",
+          "SchedulePolicyBroker — transition configuration toggles",
+          "LocationHierarchyImpl — parent-child relationship management",
+          "ShiftSwapOfferServiceImpl — cross-location shift operations"
+        ],
+        "api_endpoints_impacted": 4,
+        "test_checklist_items": 28
+      },
+      "frontend": {
+        "critical_page_objects": 4,
+        "key_areas": [
+          "Shift transition UI (create, edit, delete segments)",
+          "Location group selector (P2P, Parent-Child, district)",
+          "Schedule generation view (day/week with transitions)",
+          "Drag & drop (cross-location restrictions)",
+          "District Manager dashboard (cross-group visibility)"
+        ],
+        "existing_selenium_tests": 6,
+        "test_checklist_items": 20
+      }
+    }
+  },
+  "recommendation": {
+    "automated_regression": "Run 38 HIGH + 29 MEDIUM = 67 Playwright scenarios + 114 automated TestRail cases + 6 Selenium transition tests",
+    "manual_coverage": "Flag 315 manual TestRail cases for QA team",
+    "api_testing": "28 API/integration test checks across 4 endpoints",
+    "frontend_testing": "20 UI test checks across shift transition, location group, and schedule views",
+    "coverage_gap": "Cross-location auto-transition is new — no existing automated or manual test covers this end-to-end flow"
+  }
+}

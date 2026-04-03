@@ -1,0 +1,188 @@
+{
+  "enterpriseId": "781c5d8f-fd6d-47a5-888a-abd1d3a6961c",
+  "token": "",
+  "users": [
+    {
+      "name": "mary+admin8@legion.co",
+      "password": "legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "InternalAdmin",
+      "group": "P2PLGTest",
+      "isLocal": false,
+      "locations": ["P2P_Test"]
+    },
+    {
+      "name": "nora+mose@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "StoreManager",
+      "group": "P2PLGTest",
+      "isLocal": false,
+      "locations": ["Peer001"]
+    },
+    {
+      "name": "marym+Jamarcus@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "StoreManager2",
+      "group": "P2PLGTest",
+      "isLocal": false,
+      "locations": ["Peer02"]
+    },
+    {
+      "name": "nora+dejah@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "TeamMember",
+      "group": "P2PLGTest",
+      "isLocal": false,
+      "locations": ["Peer001"]
+    },
+    {
+      "name": "marym+Jannie@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "TeamMember2",
+      "group": "P2PLGTest",
+      "isLocal": false,
+      "locations": ["Peer02"]
+    },
+    {
+      "name": "eric.wang+Auto1@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "InternalAdmin",
+      "group": "MasterTemplateP2PTest",
+      "isLocal": false,
+      "locations": ["MasterTemplate_P2P"]
+    },
+    {
+      "name": "eric.wang+Abby@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "TeamMember",
+      "group": "MasterTemplateP2PTest",
+      "isLocal": false,
+      "locations": ["MasterTemplate_Child001"]
+    },
+    {
+      "name": "mary+admin19@legion.co",
+      "password": "legionco1",
+      "usedAs": ["UI_LOGIN", "API_LOGIN"],
+      "isUsed": false,
+      "userType": "InternalAdmin",
+      "group": "HardStopForMinorViolation",
+      "isLocal": false,
+      "locations": ["00187"]
+    },
+    {
+      "name": "storemanager+hardstop@legion.co",
+      "password": "legionco1",
+      "usedAs": ["UI_LOGIN", "API_LOGIN"],
+      "isUsed": false,
+      "userType": "StoreManager",
+      "group": "HardStopForMinorViolation",
+      "isLocal": false,
+      "locations": ["00099"]
+    },
+    {
+      "name": "marym+Dashawn@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN", "API_LOGIN", "API_LOGIN_GENERAL"],
+      "isUsed": false,
+      "userType": "Admin",
+      "isLocal": false,
+      "locations": ["Store 1"]
+    },
+    {
+      "name": "marym+admin30@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "InternalAdmin",
+      "group": "SmartTemplateTest",
+      "isLocal": false,
+      "locations": ["SmartTemplate_1"]
+    },
+    {
+      "name": "nora+gunjan7@legion.co",
+      "password": "Legionco1",
+      "usedAs": ["UI_LOGIN"],
+      "isUsed": false,
+      "userType": "InternalAdmin",
+      "group": "ScheduleExtractTest",
+      "isLocal": false,
+      "locations": ["00139"]
+    }
+  ],
+  "locations": [
+    {
+      "name": "P2P_Test",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "P2PLGTest"
+    },
+    {
+      "name": "Peer001",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "P2PLGTest"
+    },
+    {
+      "name": "Peer02",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "P2PLGTest"
+    },
+    {
+      "name": "MasterTemplate_P2P",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "MasterTemplateP2PTest"
+    },
+    {
+      "name": "MasterTemplate_Child001",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "MasterTemplateP2PTest"
+    },
+    {
+      "name": "00187",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "HardStopForMinorViolation"
+    },
+    {
+      "name": "00099",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "HardStopForMinorViolation"
+    },
+    {
+      "name": "Store 1",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "cinemark-wkdy"
+    },
+    {
+      "name": "SmartTemplate_1",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "SmartTemplateTest"
+    },
+    {
+      "name": "00139",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": "ScheduleExtractTest"
+    }
+  ],
+  "employees": []
+}

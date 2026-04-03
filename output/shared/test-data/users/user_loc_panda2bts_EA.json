@@ -1,0 +1,36 @@
+{
+  "enterpriseId": "",
+  "token": "",
+  "users": [
+    {
+      "name": "admin.a@panda2bts",
+      "password": "admin.a",
+      "usedAs": ["API_LOGIN_GENERAL", "UI_LOGIN", "API_LOGIN"],
+      "isUsed": false,
+      "userType": "Admin",
+      "isLocal": true,
+      "locations": ["LIP-Test-001"]
+    }
+  ],
+  "locations": [
+    {
+      "name": "LIP-Test-001",
+      "isLocal": true,
+      "isUsed": false,
+      "conf": "Retail"
+    }
+  ],
+  "employees": [
+    {
+      "name": "TestQA1",
+      "lastName": "TestQA1",
+      "role": "MOD",
+      "id": "00000000-0000-0000-0000-000000000001",
+      "engagementId": "00000000-0000-0000-0000-000000000002",
+      "workerId": "00000000-0000-0000-0000-000000000003",
+      "employeeId": "test-qa-1",
+      "pinNumber": "",
+      "externalEmployeeId": ""
+    }
+  ]
+}

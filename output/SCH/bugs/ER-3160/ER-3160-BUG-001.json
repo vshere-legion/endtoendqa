@@ -12,7 +12,7 @@
   "classification": "true_failure",
   "error_message": "Expected no cross-district transition but found one",
   "file": "er_2600.feature",
-  "created_at": "2026-04-03T09:45:03.359531+00:00",
+  "created_at": "2026-04-03T15:36:54.302138+00:00",
   "jira_url": "https://legiontech.atlassian.net/browse/ER-3160",
   "review_actions": [
     "APPROVE \u2014 Create Jira bug ticket",

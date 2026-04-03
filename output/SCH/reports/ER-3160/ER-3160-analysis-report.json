@@ -1,7 +1,7 @@
 {
   "story_id": "ER-3160",
   "team": "SCH",
-  "generated_at": "2026-04-03T09:45:03.324873+00:00",
+  "generated_at": "2026-04-03T15:36:54.262478+00:00",
   "test_execution_summary": {
     "total": 11,
     "passed": 8,
@@ -60,7 +60,7 @@
   "metrics": {
     "story_id": "ER-3160",
     "team": "SCH",
-    "timestamp": "2026-04-03T09:45:03.324741+00:00",
+    "timestamp": "2026-04-03T15:36:54.262349+00:00",
     "test_execution": {
       "total": 11,
       "passed": 8,
@@ -113,5 +113,5 @@
       }
     ]
   },
-  "recommendation": "Run 0 automated feature(s) (0 scenarios) + flag 0 manual feature(s) for coverage"
+  "recommendation": "Run 23 automated feature(s) (91 scenarios) + flag 0 manual feature(s) for coverage"
 }

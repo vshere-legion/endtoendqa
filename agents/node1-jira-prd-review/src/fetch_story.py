@@ -26,9 +26,9 @@ from base64 import b64encode
 # ---------------------------------------------------------------------------
 # Config from environment
 # ---------------------------------------------------------------------------
-JIRA_URL = os.environ.get("JIRA_URL", "").rstrip("/")
-JIRA_EMAIL = os.environ.get("JIRA_EMAIL", "")
-JIRA_TOKEN = os.environ.get("JIRA_TOKEN", "")
+JIRA_URL = (os.environ.get("JIRA_URL") or os.environ.get("JIRA_BASE_URL", "")).rstrip("/")
+JIRA_EMAIL = (os.environ.get("JIRA_EMAIL") or os.environ.get("JIRA_USER_EMAIL", ""))
+JIRA_TOKEN = (os.environ.get("JIRA_TOKEN") or os.environ.get("JIRA_API_TOKEN", ""))
 CONFLUENCE_BASE_URL = os.environ.get("CONFLUENCE_BASE_URL", f"{JIRA_URL}/wiki")
 
 

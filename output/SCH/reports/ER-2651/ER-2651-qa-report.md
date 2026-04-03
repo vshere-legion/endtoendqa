@@ -1,6 +1,6 @@
-# QA Pipeline Report — ER-2600
+# QA Pipeline Report — ER-2651
 
-**Team:** SCH | **Generated:** 2026-04-03T09:37:50Z
+**Team:** SCH | **Generated:** 2026-04-03T15:14:09Z
 
 ---
 
@@ -43,7 +43,7 @@
 
 ## GitHub Issues Created
 
-- **[QA-Auto] ER-2600: Auto-transition does not occur across different districts** [major] (SCH-Transitions)
+- **[QA-Auto] ER-2651: Auto-transition does not occur across different districts** [major] (SCH-Transitions)
 
 ## Quality Indicators
 

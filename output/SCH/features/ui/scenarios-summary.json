@@ -2,7 +2,7 @@
   "story_id": "ER-3160",
   "engine": "template",
   "feature_file": "/Users/vshere/Documents/Projects/QAEndToEnd/output/SCH/features/ui/er_3160.feature",
-  "generated_at": "2026-04-03T09:45:03.096413Z",
+  "generated_at": "2026-04-03T15:36:53.987174Z",
   "total_scenarios": 11,
   "breakdown": {
     "happy_path": 8,

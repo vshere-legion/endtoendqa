@@ -1,6 +1,6 @@
 {
-  "bug_id": "ER-3160-BUG-002",
-  "story_id": "ER-3160",
+  "bug_id": "ER-2651-BUG-002",
+  "story_id": "ER-2651",
   "team": "SCH",
   "status": "PENDING_REVIEW",
   "title": "Transition triggers based on labor demand threshold",
@@ -12,8 +12,8 @@
   "classification": "flaky",
   "error_message": "Timeout waiting for auto-scheduler to complete",
   "file": "er_2600.feature",
-  "created_at": "2026-04-03T15:36:54.302591+00:00",
-  "jira_url": "https://legiontech.atlassian.net/browse/ER-3160",
+  "created_at": "2026-04-03T15:14:09.113055+00:00",
+  "jira_url": "https://legiontech.atlassian.net/browse/ER-2651",
   "review_actions": [
     "APPROVE \u2014 Create Jira bug ticket",
     "REJECT \u2014 False positive, close",

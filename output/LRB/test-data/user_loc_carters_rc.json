@@ -1,0 +1,29 @@
+{
+  "enterpriseId": "carters",
+  "token": "",
+  "users": [
+    {
+      "name": "candy.zhang+autoadmin@legion.co",
+      "password": "Legionco1",
+      "usedAs": [
+        "UI_LOGIN"
+      ],
+      "isUsed": false,
+      "userType": "InternalAdmin",
+      "group": "LRBTest",
+      "isLocal": false,
+      "locations": [
+        "2266 West Hartford CT"
+      ]
+    }
+  ],
+  "locations": [
+    {
+      "name": "2266 West Hartford CT",
+      "isLocal": false,
+      "isUsed": false,
+      "conf": {}
+    }
+  ],
+  "employees": []
+}

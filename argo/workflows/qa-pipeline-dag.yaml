@@ -376,23 +376,68 @@ spec:
           - name: story-id
           - name: node-output
       container:
-        image: alpine:3.19
-        command: [sh, -c]
+        image: mcr.microsoft.com/playwright:v1.50.0-jammy
+        command: [bash, -c]
         args:
           - |
+            set -e
             echo "========================================"
             echo "NODE 4 — Execute Test Suite"
             echo "========================================"
             echo "Story ID: {{inputs.parameters.story-id}}"
-            echo "Action: Running Playwright tests with --trace on"
-            echo "Browser: chromium"
-            echo "Total: 42 | Passed: 38 | Failed: 3 | Flaky: 1"
-            echo "Duration: 180s"
-            echo "Traces: collected for all tests"
-            echo "Screenshots: captured for failures"
-            echo "Status: COMPLETE"
+
+            STORY_ID="{{inputs.parameters.story-id}}"
+            STORY_SLUG=$(echo "$STORY_ID" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
+
+            # Clone the Playwright automation framework
+            echo "Cloning playwright-automation-framework..."
+            git clone --depth 1 --branch feat/sch-nishant \
+              https://github.com/legionco/playwright-automation-framework.git /app
+            cd /app
+
+            # Install dependencies
+            echo "Installing dependencies..."
+            npm ci --ignore-scripts
+
+            # Generate BDD test files
+            echo "Generating BDD specs..."
+            TEST_TEAM=SCH TYPE=ui TEST_ENV="${TEST_ENV:-rc}" ENTERPRISE="${ENTERPRISE:-cinemark-wkdy}" \
+              npx bddgen 2>&1 | tail -5
+
+            # Run Playwright tests filtered by story ID
+            echo "Running Playwright tests for $STORY_ID..."
+            TEST_TEAM=SCH TYPE=ui TEST_ENV="${TEST_ENV:-rc}" ENTERPRISE="${ENTERPRISE:-cinemark-wkdy}" WORKERS=1 \
+              npx playwright test \
+                --project=chromium \
+                --grep "@${STORY_ID}" \
+                --reporter=json,line \
+                --retries=1 2>&1 | tee /tmp/test-output.txt || true
+
+            # Parse results
+            TOTAL=$(grep -oP '"total":\s*\K\d+' /tmp/test-output.txt 2>/dev/null | head -1 || echo "0")
+            PASSED=$(grep -oP '"passed":\s*\K\d+' /tmp/test-output.txt 2>/dev/null | head -1 || echo "0")
+            FAILED=$(grep -oP '"failed":\s*\K\d+' /tmp/test-output.txt 2>/dev/null | head -1 || echo "0")
+            FLAKY=$(grep -oP '"flaky":\s*\K\d+' /tmp/test-output.txt 2>/dev/null | head -1 || echo "0")
+
             echo "========================================"
-            echo '{"total":42,"passed":38,"failed":3,"flaky":1,"duration_ms":180000}' > /tmp/result.json
+            echo "Results: Total=$TOTAL Passed=$PASSED Failed=$FAILED Flaky=$FLAKY"
+            echo "========================================"
+
+            echo "{\"total\":${TOTAL:-0},\"passed\":${PASSED:-0},\"failed\":${FAILED:-0},\"flaky\":${FLAKY:-0},\"story_id\":\"$STORY_ID\"}" > /tmp/result.json
+        env:
+          - name: TEST_ENV
+            value: "rc"
+          - name: ENTERPRISE
+            value: "cinemark-wkdy"
+          - name: CI
+            value: "true"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
       outputs:
         parameters:
           - name: result

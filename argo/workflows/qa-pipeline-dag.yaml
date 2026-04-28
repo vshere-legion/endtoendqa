@@ -24,6 +24,9 @@ spec:
       - name: requested-by
         value: "vshere@legion.co"
         description: "User or system that triggered the pipeline"
+      - name: github-token
+        value: ""
+        description: "GitHub PAT for cloning the Playwright framework repo"
 
   templates:
     # ============================================================
@@ -118,6 +121,8 @@ spec:
                   value: "{{workflow.parameters.story-id}}"
                 - name: node-output
                   value: "{{tasks.node3c-script-review.outputs.parameters.result}}"
+                - name: github-token
+                  value: "{{workflow.parameters.github-token}}"
 
           # --- Node 5: Regression Impact Analysis ---
           - name: node5-regression-analysis
@@ -370,60 +375,85 @@ spec:
               path: /tmp/result.json
 
     # --- Node 4: Execute Test Suite ---
+    # Uses Argo's git artifact with the existing git-repo-login K8s secret
+    # (managed by DevOps) — same pattern as ci/argo/workflow-template.yaml
+    # in the Playwright framework repo. No GitHub egress needed from container.
     - name: node4-test-execution
       inputs:
         parameters:
           - name: story-id
           - name: node-output
+          - name: github-token
+        artifacts:
+          - name: source
+            path: /app
+            git:
+              repo: "https://github.com/legionco/playwright-automation-framework.git"
+              revision: "feat/sch-nishant"
+              usernameSecret:
+                name: git-repo-login
+                key: username
+              passwordSecret:
+                name: git-repo-login
+                key: password
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi
       container:
-        image: mcr.microsoft.com/playwright:v1.50.0-jammy
+        image: mcr.microsoft.com/playwright:v1.58.2-noble
+        workingDir: /app
         command: [bash, -c]
         args:
           - |
+            # Always write result.json on exit so Argo can collect output param
+            cleanup_on_error() {
+              local exit_code=$?
+              if [ ! -f /tmp/result.json ]; then
+                echo "{\"story_id\":\"{{inputs.parameters.story-id}}\",\"status\":\"failed\",\"exit_code\":${exit_code},\"error\":\"see container logs\",\"total\":0,\"passed\":0,\"failed\":0,\"flaky\":0}" > /tmp/result.json
+              fi
+              exit $exit_code
+            }
+            trap cleanup_on_error EXIT
             set -e
+
             echo "========================================"
             echo "NODE 4 — Execute Test Suite"
             echo "========================================"
             echo "Story ID: {{inputs.parameters.story-id}}"
 
             STORY_ID="{{inputs.parameters.story-id}}"
-            STORY_SLUG=$(echo "$STORY_ID" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
 
-            # Clone the Playwright automation framework
-            echo "Cloning playwright-automation-framework..."
-            git clone --depth 1 --branch feat/sch-nishant \
-              https://github.com/legionco/playwright-automation-framework.git /app
-            cd /app
-
-            # Install dependencies
+            # Source already cloned by Argo git artifact at /app
             echo "Installing dependencies..."
-            npm ci --ignore-scripts
+            npm ci --ignore-scripts 2>&1 | tail -3
 
             # Generate BDD test files
             echo "Generating BDD specs..."
             TEST_TEAM=SCH TYPE=ui TEST_ENV="${TEST_ENV:-rc}" ENTERPRISE="${ENTERPRISE:-cinemark-wkdy}" \
               npx bddgen 2>&1 | tail -5
 
-            # Run Playwright tests filtered by story ID
+            # Run Playwright tests filtered by story ID tag
             echo "Running Playwright tests for $STORY_ID..."
             TEST_TEAM=SCH TYPE=ui TEST_ENV="${TEST_ENV:-rc}" ENTERPRISE="${ENTERPRISE:-cinemark-wkdy}" WORKERS=1 \
               npx playwright test \
                 --project=chromium \
                 --grep "@${STORY_ID}" \
-                --reporter=json,line \
                 --retries=1 2>&1 | tee /tmp/test-output.txt || true
 
-            # Parse results
-            TOTAL=$(grep -oP '"total":\s*\K\d+' /tmp/test-output.txt 2>/dev/null | head -1 || echo "0")
-            PASSED=$(grep -oP '"passed":\s*\K\d+' /tmp/test-output.txt 2>/dev/null | head -1 || echo "0")
-            FAILED=$(grep -oP '"failed":\s*\K\d+' /tmp/test-output.txt 2>/dev/null | head -1 || echo "0")
-            FLAKY=$(grep -oP '"flaky":\s*\K\d+' /tmp/test-output.txt 2>/dev/null | head -1 || echo "0")
+            # Parse Playwright "X passed/failed/flaky" line from output
+            RESULT_LINE=$(grep -E "(passed|failed|flaky)" /tmp/test-output.txt | tail -1)
+            PASSED=$(echo "$RESULT_LINE" | grep -oP '\d+(?= passed)' || echo "0")
+            FAILED=$(echo "$RESULT_LINE" | grep -oP '\d+(?= failed)' || echo "0")
+            FLAKY=$(echo "$RESULT_LINE" | grep -oP '\d+(?= flaky)' || echo "0")
+            TOTAL=$((${PASSED:-0} + ${FAILED:-0} + ${FLAKY:-0}))
 
             echo "========================================"
             echo "Results: Total=$TOTAL Passed=$PASSED Failed=$FAILED Flaky=$FLAKY"
             echo "========================================"
 
-            echo "{\"total\":${TOTAL:-0},\"passed\":${PASSED:-0},\"failed\":${FAILED:-0},\"flaky\":${FLAKY:-0},\"story_id\":\"$STORY_ID\"}" > /tmp/result.json
+            echo "{\"total\":${TOTAL},\"passed\":${PASSED:-0},\"failed\":${FAILED:-0},\"flaky\":${FLAKY:-0},\"story_id\":\"$STORY_ID\"}" > /tmp/result.json
         env:
           - name: TEST_ENV
             value: "rc"
@@ -431,6 +461,9 @@ spec:
             value: "cinemark-wkdy"
           - name: CI
             value: "true"
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
         resources:
           requests:
             memory: "2Gi"

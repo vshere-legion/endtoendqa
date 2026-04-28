@@ -1,13 +1,13 @@
 {
   "files_processed": 1,
-  "total_scenarios": 10,
+  "total_scenarios": 1,
   "results": [
     {
-      "feature_file": "er_3160.feature",
-      "team": "SCH",
-      "scenarios": 10,
-      "steps_file": "/Users/vshere/Documents/Projects/QAEndToEnd/output/SCH/steps/er_3160.steps.ts",
-      "page_file": "/Users/vshere/Documents/Projects/QAEndToEnd/output/SCH/pages/Er3160Page.ts",
+      "feature_file": "lp-create-plan.feature",
+      "team": "LRB",
+      "scenarios": 1,
+      "steps_file": "output/LRB/steps/lp-create-plan.steps.ts",
+      "page_file": "output/LRB/pages/LpCreatePlanPage.ts",
       "locator_stats": {
         "getByRole": 19,
         "getByText": 1,
